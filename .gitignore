@@ -1,0 +1,98 @@
+# ========================
+# Dependencies
+# ========================
+node_modules/
+.pnpm-store/
+
+# ========================
+# Build Outputs
+# ========================
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# ========================
+# Turbo
+# ========================
+.turbo/
+
+# ========================
+# Environment
+# ========================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+
+# ========================
+# IDE / Editor
+# ========================
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ========================
+# Testing / Coverage
+# ========================
+coverage/
+.nyc_output/
+*.lcov
+
+# ========================
+# Logs
+# ========================
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ========================
+# Python
+# ========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+.eggs/
+*.egg
+
+# ========================
+# Docker
+# ========================
+docker-compose.override.yml
+
+# ========================
+# Prisma
+# ========================
+packages/db/prisma/*.db
+packages/db/prisma/migrations/
+
+# ========================
+# OS Files
+# ========================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ========================
+# Misc
+# ========================
+*.tgz
+.cache/
+.parcel-cache/
