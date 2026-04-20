@@ -1,0 +1,134 @@
+// ============================================================
+// AMDOX Database Schema
+// ============================================================
+// Docs: https://pris.ly/d/prisma-schema
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// User & Auth Models
+// ============================================================
+
+model User {
+  id            String    @id @default(cuid())
+  externalId    String?   @unique @map("external_id") // Keycloak subject ID
+  email         String    @unique
+  emailVerified Boolean   @default(false) @map("email_verified")
+  firstName     String?   @map("first_name")
+  lastName      String?   @map("last_name")
+  avatarUrl     String?   @map("avatar_url")
+  isActive      Boolean   @default(true) @map("is_active")
+
+  // Relations
+  roles         UserRole[]
+  documents     Document[]
+  auditLogs     AuditLog[]
+
+  // Timestamps
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  lastLoginAt   DateTime? @map("last_login_at")
+
+  @@map("users")
+}
+
+model Role {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  description String?
+  permissions String[]   @default([])
+
+  // Relations
+  users       UserRole[]
+
+  // Timestamps
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  @@map("roles")
+}
+
+model UserRole {
+  userId    String   @map("user_id")
+  roleId    String   @map("role_id")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  assignedAt DateTime @default(now()) @map("assigned_at")
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+// ============================================================
+// Document Models
+// ============================================================
+
+model Document {
+  id          String         @id @default(cuid())
+  title       String
+  description String?
+  mimeType    String         @map("mime_type")
+  fileSize    Int            @map("file_size")
+  storagePath String         @map("storage_path")
+  status      DocumentStatus @default(PENDING)
+
+  // AI Processing
+  extractedText String?      @map("extracted_text") @db.Text
+  metadata      Json?        @default("{}")
+
+  // Relations
+  uploadedBy    String       @map("uploaded_by")
+  user          User         @relation(fields: [uploadedBy], references: [id])
+
+  // Timestamps
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+  processedAt   DateTime?    @map("processed_at")
+
+  @@index([uploadedBy])
+  @@index([status])
+  @@index([createdAt])
+  @@map("documents")
+}
+
+enum DocumentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// ============================================================
+// Audit Log
+// ============================================================
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String   @map("entity_id")
+  details   Json?    @default("{}")
+  ipAddress String?  @map("ip_address")
+
+  // Relations
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+
+  // Timestamps
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

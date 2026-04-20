@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 version: '3.9'
 
 services:
@@ -19,6 +20,33 @@ services:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+=======
+# ============================================================
+# AMDOX Docker Compose — Development Stack
+# ============================================================
+# Usage: docker compose up -d
+# ============================================================
+
+services:
+  # ----------------------------------------------------------
+  # PostgreSQL 17
+  # ----------------------------------------------------------
+  postgres:
+    image: postgres:17-alpine
+    container_name: amdox-postgres
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      POSTGRES_DB: ${DB_NAME:-amdox}
+      POSTGRES_USER: ${DB_USER:-amdox}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-amdox_secret}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-amdox} -d ${DB_NAME:-amdox}"]
+>>>>>>> ad4764060fe71460b97cd325cf64002388ffea0d
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,6 +54,7 @@ services:
     networks:
       - amdox-network
 
+<<<<<<< HEAD
   # ──────────────────────────────────────────────
   # Redis 7 — Caching, Rate Limiting, Token Blacklist
   # ──────────────────────────────────────────────
@@ -55,10 +84,56 @@ services:
   # ──────────────────────────────────────────────
   # Keycloak 25 — Identity & Access Management
   # ──────────────────────────────────────────────
+=======
+  # ----------------------------------------------------------
+  # Redis 8
+  # ----------------------------------------------------------
+  redis:
+    image: redis:8-alpine
+    container_name: amdox-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_DOCKER_PORT:-6379}:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - amdox-network
+
+  # ----------------------------------------------------------
+  # Keycloak 25 (with PostgreSQL backend)
+  # ----------------------------------------------------------
+  keycloak-db:
+    image: postgres:17-alpine
+    container_name: amdox-keycloak-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak_secret
+    volumes:
+      - keycloak_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak -d keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - amdox-network
+
+>>>>>>> ad4764060fe71460b97cd325cf64002388ffea0d
   keycloak:
     image: quay.io/keycloak/keycloak:25.0
     container_name: amdox-keycloak
     restart: unless-stopped
+<<<<<<< HEAD
     command: start --import-realm
     environment:
       # Admin credentials
@@ -114,6 +189,30 @@ services:
       - es_data:/usr/share/elasticsearch/data
     healthcheck:
       test: ['CMD-SHELL', 'curl -s http://localhost:9200/_cluster/health | grep -q ''"status":"green"\|"status":"yellow"''']
+=======
+    ports:
+      - "${KEYCLOAK_PORT:-8080}:8080"
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak_secret
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: ${KEYCLOAK_PORT:-8080}
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_HTTP_ENABLED: true
+      KC_HEALTH_ENABLED: true
+      KC_METRICS_ENABLED: true
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN_USER:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+    command: start-dev
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200'"]
+>>>>>>> ad4764060fe71460b97cd325cf64002388ffea0d
       interval: 30s
       timeout: 10s
       retries: 5
@@ -121,14 +220,67 @@ services:
     networks:
       - amdox-network
 
+<<<<<<< HEAD
+=======
+  # ----------------------------------------------------------
+  # Elasticsearch 8.x
+  # ----------------------------------------------------------
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
+    container_name: amdox-elasticsearch
+    restart: unless-stopped
+    ports:
+      - "${ELASTICSEARCH_PORT:-9200}:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+      - cluster.name=amdox-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsSL http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - amdox-network
+
+# ============================================================
+# Volumes
+# ============================================================
+>>>>>>> ad4764060fe71460b97cd325cf64002388ffea0d
 volumes:
   postgres_data:
     driver: local
   redis_data:
     driver: local
+<<<<<<< HEAD
   es_data:
     driver: local
 
+=======
+  keycloak_db_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
+
+# ============================================================
+# Networks
+# ============================================================
+>>>>>>> ad4764060fe71460b97cd325cf64002388ffea0d
 networks:
   amdox-network:
     driver: bridge
