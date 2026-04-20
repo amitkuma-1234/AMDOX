@@ -1,0 +1,45 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build
+dist/
+build/
+
+# Environment
+.env
+.env.local
+.env.production
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Test
+coverage/
+.nyc_output/
+
+# Prisma
+prisma/migrations/**/migration_lock.toml
+
+# Keys (NEVER commit private keys)
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Docker
+docker-compose.override.yml

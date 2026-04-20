@@ -1,0 +1,491 @@
+{
+  "id": "amdox",
+  "realm": "amdox",
+  "displayName": "AMDOX ERP Platform",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 5,
+  "defaultSignatureAlgorithm": "RS256",
+  "accessTokenLifespan": 3600,
+  "accessTokenLifespanForImplicitFlow": 900,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "offlineSessionIdleTimeout": 2592000,
+  "offlineSessionMaxLifespan": 5184000,
+  "accessCodeLifespan": 60,
+  "accessCodeLifespanUserAction": 300,
+  "accessCodeLifespanLogin": 1800,
+  "actionTokenGeneratedByAdminLifespan": 43200,
+  "actionTokenGeneratedByUserLifespan": 300,
+  "otpPolicyType": "totp",
+  "otpPolicyAlgorithm": "HmacSHA1",
+  "otpPolicyInitialCounter": 0,
+  "otpPolicyDigits": 6,
+  "otpPolicyLookAheadWindow": 1,
+  "otpPolicyPeriod": 30,
+  "passwordPolicy": "length(12) and upperCase(1) and lowerCase(1) and digits(1) and specialChars(1) and notUsername and passwordHistory(5)",
+  "roles": {
+    "realm": [
+      {
+        "name": "super_admin",
+        "description": "Full system access across all tenants",
+        "composite": false
+      },
+      {
+        "name": "tenant_admin",
+        "description": "Full access within a single tenant",
+        "composite": false
+      },
+      {
+        "name": "accountant",
+        "description": "Access to accounting and financial modules",
+        "composite": false
+      },
+      {
+        "name": "hr_manager",
+        "description": "Access to HR and employee management modules",
+        "composite": false
+      },
+      {
+        "name": "inventory_manager",
+        "description": "Access to inventory and procurement modules",
+        "composite": false
+      },
+      {
+        "name": "auditor",
+        "description": "Read-only access to audit logs and reports",
+        "composite": false
+      },
+      {
+        "name": "viewer",
+        "description": "Read-only access to assigned modules",
+        "composite": false
+      }
+    ],
+    "client": {
+      "amdox-api": [
+        {
+          "name": "api_full_access",
+          "description": "Full API access"
+        },
+        {
+          "name": "api_read_only",
+          "description": "Read-only API access"
+        }
+      ]
+    }
+  },
+  "clients": [
+    {
+      "clientId": "amdox-api",
+      "name": "AMDOX API Client",
+      "description": "OIDC confidential client for the AMDOX backend API",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "CHANGE_ME_IN_PRODUCTION",
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "authorizationServicesEnabled": true,
+      "redirectUris": [
+        "http://localhost:3000/*",
+        "http://localhost:4200/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000",
+        "http://localhost:4200"
+      ],
+      "bearerOnly": false,
+      "consentRequired": false,
+      "fullScopeAllowed": true,
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "tenant_scope",
+        "roles_scope"
+      ],
+      "optionalClientScopes": [
+        "offline_access",
+        "microprofile-jwt"
+      ],
+      "protocolMappers": [
+        {
+          "name": "tenant-id-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "tenantId",
+            "claim.name": "tenant_id",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "multivalued": "false"
+          }
+        },
+        {
+          "name": "realm-roles-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "permissions-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "permissions",
+            "claim.name": "permissions",
+            "jsonType.label": "JSON",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "multivalued": "true"
+          }
+        }
+      ],
+      "attributes": {
+        "access.token.signed.response.alg": "RS256",
+        "id.token.signed.response.alg": "RS256",
+        "token.endpoint.auth.signing.alg": "RS256",
+        "use.refresh.tokens": "true",
+        "client_credentials.use_refresh_token": "false",
+        "tls.client.certificate.bound.access.tokens": "false",
+        "require.pushed.authorization.requests": "false",
+        "pkce.code.challenge.method": "S256"
+      }
+    },
+    {
+      "clientId": "amdox-saml",
+      "name": "AMDOX SAML Client",
+      "description": "SAML 2.0 service provider for federated enterprise SSO",
+      "enabled": true,
+      "protocol": "saml",
+      "fullScopeAllowed": true,
+      "frontchannelLogout": true,
+      "attributes": {
+        "saml.assertion.signature": "true",
+        "saml.server.signature": "true",
+        "saml.client.signature": "true",
+        "saml.encrypt": "true",
+        "saml.authnstatement": "true",
+        "saml.force.post.binding": "true",
+        "saml_name_id_format": "email",
+        "saml.server.signature.keyinfo.ext": "false",
+        "saml.signing.certificate": "REPLACE_WITH_SP_CERTIFICATE",
+        "saml.signature.algorithm": "RSA_SHA256",
+        "saml_force_name_id_format": "true",
+        "saml.assertion.lifespan": "300"
+      },
+      "redirectUris": [
+        "http://localhost:3000/auth/saml/callback"
+      ],
+      "protocolMappers": [
+        {
+          "name": "tenant-id-saml",
+          "protocol": "saml",
+          "protocolMapper": "saml-user-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "tenantId",
+            "friendly.name": "Tenant ID",
+            "attribute.name": "tenant_id",
+            "attribute.nameformat": "Basic"
+          }
+        },
+        {
+          "name": "email-saml",
+          "protocol": "saml",
+          "protocolMapper": "saml-user-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "email",
+            "friendly.name": "Email",
+            "attribute.name": "email",
+            "attribute.nameformat": "Basic"
+          }
+        },
+        {
+          "name": "roles-saml",
+          "protocol": "saml",
+          "protocolMapper": "saml-role-list-mapper",
+          "consentRequired": false,
+          "config": {
+            "single": "false",
+            "attribute.nameformat": "Basic",
+            "friendly.name": "Roles",
+            "attribute.name": "roles"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "amdox-frontend",
+      "name": "AMDOX Frontend Client",
+      "description": "Public OIDC client for SPA frontend",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:4200/*",
+        "http://localhost:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:4200",
+        "http://localhost:3000"
+      ],
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "tenant_scope",
+        "roles_scope"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "access.token.signed.response.alg": "RS256",
+        "id.token.signed.response.alg": "RS256",
+        "use.refresh.tokens": "true"
+      }
+    }
+  ],
+  "clientScopes": [
+    {
+      "name": "tenant_scope",
+      "description": "Tenant context scope",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "Access your tenant information"
+      },
+      "protocolMappers": [
+        {
+          "name": "tenant-id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "config": {
+            "user.attribute": "tenantId",
+            "claim.name": "tenant_id",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "name": "roles_scope",
+      "description": "User roles scope",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "realm-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "config": {
+            "claim.name": "roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "identityProviders": [
+    {
+      "alias": "azure-ad",
+      "displayName": "Microsoft Azure AD",
+      "providerId": "oidc",
+      "enabled": false,
+      "trustEmail": true,
+      "storeToken": true,
+      "addReadTokenRoleOnCreate": true,
+      "firstBrokerLoginFlowAlias": "first broker login",
+      "config": {
+        "clientId": "AZURE_AD_CLIENT_ID_PLACEHOLDER",
+        "clientSecret": "AZURE_AD_CLIENT_SECRET_PLACEHOLDER",
+        "tokenUrl": "https://login.microsoftonline.com/AZURE_TENANT_ID/oauth2/v2.0/token",
+        "authorizationUrl": "https://login.microsoftonline.com/AZURE_TENANT_ID/oauth2/v2.0/authorize",
+        "logoutUrl": "https://login.microsoftonline.com/AZURE_TENANT_ID/oauth2/v2.0/logout",
+        "userInfoUrl": "https://graph.microsoft.com/oidc/userinfo",
+        "issuer": "https://login.microsoftonline.com/AZURE_TENANT_ID/v2.0",
+        "defaultScope": "openid profile email",
+        "useJwksUrl": "true",
+        "jwksUrl": "https://login.microsoftonline.com/AZURE_TENANT_ID/discovery/v2.0/keys",
+        "validateSignature": "true",
+        "syncMode": "IMPORT",
+        "backchannelSupported": "true"
+      }
+    }
+  ],
+  "identityProviderMappers": [
+    {
+      "name": "azure-ad-email-mapper",
+      "identityProviderAlias": "azure-ad",
+      "identityProviderMapper": "oidc-user-attribute-idp-mapper",
+      "config": {
+        "claim": "email",
+        "user.attribute": "email",
+        "syncMode": "INHERIT"
+      }
+    },
+    {
+      "name": "azure-ad-first-name-mapper",
+      "identityProviderAlias": "azure-ad",
+      "identityProviderMapper": "oidc-user-attribute-idp-mapper",
+      "config": {
+        "claim": "given_name",
+        "user.attribute": "firstName",
+        "syncMode": "INHERIT"
+      }
+    },
+    {
+      "name": "azure-ad-last-name-mapper",
+      "identityProviderAlias": "azure-ad",
+      "identityProviderMapper": "oidc-user-attribute-idp-mapper",
+      "config": {
+        "claim": "family_name",
+        "user.attribute": "lastName",
+        "syncMode": "INHERIT"
+      }
+    }
+  ],
+  "requiredActions": [
+    {
+      "alias": "CONFIGURE_TOTP",
+      "name": "Configure OTP",
+      "providerId": "CONFIGURE_TOTP",
+      "enabled": true,
+      "defaultAction": true,
+      "priority": 10
+    },
+    {
+      "alias": "VERIFY_EMAIL",
+      "name": "Verify Email",
+      "providerId": "VERIFY_EMAIL",
+      "enabled": true,
+      "defaultAction": true,
+      "priority": 50
+    },
+    {
+      "alias": "UPDATE_PASSWORD",
+      "name": "Update Password",
+      "providerId": "UPDATE_PASSWORD",
+      "enabled": true,
+      "defaultAction": false,
+      "priority": 30
+    }
+  ],
+  "authenticationFlows": [
+    {
+      "alias": "amdox-browser-flow",
+      "description": "AMDOX browser authentication with mandatory OTP",
+      "providerId": "basic-flow",
+      "topLevel": true,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "auth-cookie",
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
+          "priority": 10
+        },
+        {
+          "authenticator": "auth-spnego",
+          "authenticatorFlow": false,
+          "requirement": "DISABLED",
+          "priority": 20
+        },
+        {
+          "authenticator": "identity-provider-redirector",
+          "authenticatorFlow": false,
+          "requirement": "ALTERNATIVE",
+          "priority": 25
+        },
+        {
+          "authenticatorFlow": true,
+          "requirement": "ALTERNATIVE",
+          "priority": 30,
+          "flowAlias": "amdox-browser-forms"
+        }
+      ]
+    },
+    {
+      "alias": "amdox-browser-forms",
+      "description": "Username/password + OTP form",
+      "providerId": "basic-flow",
+      "topLevel": false,
+      "builtIn": false,
+      "authenticationExecutions": [
+        {
+          "authenticator": "auth-username-password-form",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 10
+        },
+        {
+          "authenticator": "auth-otp-form",
+          "authenticatorFlow": false,
+          "requirement": "REQUIRED",
+          "priority": 20
+        }
+      ]
+    }
+  ],
+  "browserFlow": "amdox-browser-flow",
+  "smtpServer": {
+    "host": "smtp.example.com",
+    "port": "587",
+    "from": "noreply@amdox.com",
+    "fromDisplayName": "AMDOX Platform",
+    "ssl": "false",
+    "starttls": "true",
+    "auth": "true",
+    "user": "SMTP_USER_PLACEHOLDER",
+    "password": "SMTP_PASSWORD_PLACEHOLDER"
+  },
+  "eventsConfig": {
+    "eventsEnabled": true,
+    "eventsExpiration": 2592000,
+    "eventsListeners": ["jboss-logging"],
+    "adminEventsEnabled": true,
+    "adminEventsDetailsEnabled": true
+  }
+}
