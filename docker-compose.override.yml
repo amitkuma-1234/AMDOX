@@ -1,0 +1,64 @@
+# ──────────────────────────────────────────────
+# Development Overrides
+# This file is automatically merged with docker-compose.yml
+# when running `docker compose up` without -f flag.
+# ──────────────────────────────────────────────
+version: '3.9'
+
+services:
+  # Keycloak dev mode overrides
+  keycloak:
+    command: start-dev --import-realm
+    environment:
+      # Development mode settings
+      KC_LOG_LEVEL: INFO
+      KC_HTTP_ENABLED: 'true'
+      KC_HOSTNAME_STRICT: 'false'
+      KC_HOSTNAME_STRICT_HTTPS: 'false'
+      # Enable all features for development
+      KC_FEATURES: >-
+        token-exchange,
+        admin-fine-grained-authz,
+        declarative-user-profile,
+        impersonation
+      # Theme caching disabled for dev
+      KC_SPI_THEME_STATIC_MAX_AGE: '-1'
+      KC_SPI_THEME_CACHE_THEMES: 'false'
+      KC_SPI_THEME_CACHE_TEMPLATES: 'false'
+    ports:
+      - '8080:8080'
+      # Management port for metrics/health
+      - '9000:9000'
+
+  # PostgreSQL dev overrides
+  postgres:
+    environment:
+      # Create keycloak DB on init
+      POSTGRES_MULTIPLE_DATABASES: 'amdox,keycloak'
+    ports:
+      - '5432:5432'
+    # Enable query logging in dev
+    command: >
+      postgres
+      -c log_statement=all
+      -c log_duration=on
+      -c log_min_duration_statement=100
+
+  # Redis dev overrides
+  redis:
+    command: >
+      redis-server
+      --requirepass amdox_redis_2024
+      --maxmemory 128mb
+      --maxmemory-policy allkeys-lru
+      --loglevel verbose
+    ports:
+      - '6379:6379'
+
+  # Elasticsearch dev overrides
+  elasticsearch:
+    environment:
+      - 'ES_JAVA_OPTS=-Xms256m -Xmx256m'
+    ports:
+      - '9200:9200'
+      - '9300:9300'

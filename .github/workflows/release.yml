@@ -1,0 +1,206 @@
+# ============================================================
+# AMDOX Release Pipeline
+# ============================================================
+# Triggers on version tags (v*). Builds production images
+# and deploys via ArgoCD.
+# ============================================================
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+env:
+  NODE_VERSION: "20"
+  PNPM_VERSION: "9.15.4"
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  # ----------------------------------------------------------
+  # Validate Tag
+  # ----------------------------------------------------------
+  validate:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Validate semver
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+            echo "❌ Invalid semver: $VERSION"
+            exit 1
+          fi
+          echo "✅ Valid version: $VERSION"
+
+  # ----------------------------------------------------------
+  # Build & Push Production Images
+  # ----------------------------------------------------------
+  release-images:
+    name: Build Production Images
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [validate]
+    strategy:
+      matrix:
+        include:
+          - app: web
+            context: .
+            dockerfile: ./Dockerfile
+            target: runner-web
+          - app: api
+            context: .
+            dockerfile: ./Dockerfile
+            target: runner-api
+          - app: ml-service
+            context: ./apps/ml-service
+            dockerfile: ./apps/ml-service/Dockerfile
+            target: ""
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          target: ${{ matrix.target || '' }}
+          build-args: ${{ matrix.target && format('APP={0}', matrix.app) || '' }}
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/amdox-${{ matrix.app }}:${{ needs.validate.outputs.version }}
+            ${{ secrets.DOCKER_USERNAME }}/amdox-${{ matrix.app }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ----------------------------------------------------------
+  # Deploy via ArgoCD
+  # ----------------------------------------------------------
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [validate, release-images]
+    environment: production
+    steps:
+      - name: Trigger ArgoCD Sync
+        run: |
+          curl -sSL -X POST \
+            "${{ secrets.ARGOCD_SERVER }}/api/v1/applications/${{ vars.ARGOCD_APP_NAME }}/sync" \
+            -H "Authorization: Bearer ${{ secrets.ARGOCD_AUTH_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{"revision": "v${{ needs.validate.outputs.version }}"}'
+
+      - name: Wait for sync
+        run: |
+          echo "⏳ Waiting for ArgoCD sync to complete..."
+          sleep 30
+          STATUS=$(curl -sSL \
+            "${{ secrets.ARGOCD_SERVER }}/api/v1/applications/${{ vars.ARGOCD_APP_NAME }}" \
+            -H "Authorization: Bearer ${{ secrets.ARGOCD_AUTH_TOKEN }}" \
+            | jq -r '.status.sync.status')
+          echo "ArgoCD sync status: $STATUS"
+          if [[ "$STATUS" != "Synced" ]]; then
+            echo "⚠️ Sync not yet complete, check ArgoCD dashboard"
+          fi
+
+  # ----------------------------------------------------------
+  # GitHub Release
+  # ----------------------------------------------------------
+  github-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [validate, release-images]
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$PREV_TAG" ]; then
+            CHANGES=$(git log ${PREV_TAG}..HEAD --oneline --no-merges)
+          else
+            CHANGES=$(git log --oneline --no-merges -20)
+          fi
+          echo "changes<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.validate.outputs.version }}
+          name: "AMDOX v${{ needs.validate.outputs.version }}"
+          body: |
+            ## What's Changed
+
+            ${{ steps.changelog.outputs.changes }}
+
+            ## Docker Images
+
+            - `amdox-web:${{ needs.validate.outputs.version }}`
+            - `amdox-api:${{ needs.validate.outputs.version }}`
+            - `amdox-ml-service:${{ needs.validate.outputs.version }}`
+          draft: false
+          prerelease: ${{ contains(needs.validate.outputs.version, '-') }}
+
+  # ----------------------------------------------------------
+  # Slack Notification
+  # ----------------------------------------------------------
+  notify:
+    name: Release Notification
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [validate, deploy, github-release]
+    if: always()
+    steps:
+      - name: Send Slack notification
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "attachments": [
+                {
+                  "color": "#16a34a",
+                  "blocks": [
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "🚀 *AMDOX v${{ needs.validate.outputs.version }}* released and deployed!\n<${{ github.server_url }}/${{ github.repository }}/releases/tag/v${{ needs.validate.outputs.version }}|View Release>"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }

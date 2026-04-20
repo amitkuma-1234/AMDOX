@@ -1,15 +1,22 @@
 {
   "moduleFileExtensions": ["js", "json", "ts"],
+<<<<<<< HEAD
   "rootDir": "..",
+=======
+  "rootDir": ".",
+>>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
+<<<<<<< HEAD
   },
   "moduleNameMapper": {
     "^@/(.*)$": "<rootDir>/src/$1",
     "^@common/(.*)$": "<rootDir>/src/common/$1",
     "^@auth/(.*)$": "<rootDir>/src/auth/$1",
     "^@database/(.*)$": "<rootDir>/src/database/$1"
+=======
+>>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
   }
 }
