@@ -9,10 +9,7 @@ import { PrismaService } from '../../database/prisma.service';
  * Validates refresh tokens stored in the database and checks revocation status.
  */
 @Injectable()
-export class RefreshTokenStrategy extends PassportStrategy(
-  Strategy,
-  'jwt-refresh',
-) {
+export class RefreshTokenStrategy extends PassportStrategy(Strategy, 'jwt-refresh') {
   private readonly logger = new Logger(RefreshTokenStrategy.name);
 
   constructor(
@@ -33,10 +30,7 @@ export class RefreshTokenStrategy extends PassportStrategy(
   /**
    * Validate refresh token — check if it exists, is not revoked, and not expired.
    */
-  async validate(
-    req: any,
-    payload: { sub: string; tenant_id: string; type: string },
-  ) {
+  async validate(req: any, payload: { sub: string; tenant_id: string; type: string }) {
     const refreshToken = req.body?.refreshToken;
 
     if (!refreshToken) {
@@ -57,9 +51,7 @@ export class RefreshTokenStrategy extends PassportStrategy(
     });
 
     if (!storedToken) {
-      this.logger.warn(
-        `Refresh token not found or revoked for user ${payload.sub}`,
-      );
+      this.logger.warn(`Refresh token not found or revoked for user ${payload.sub}`);
       throw new UnauthorizedException('Refresh token is invalid or revoked');
     }
 

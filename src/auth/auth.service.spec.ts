@@ -128,9 +128,7 @@ describe('AuthService', () => {
       expect(result.tokenType).toBe('Bearer');
       expect(result.expiresIn).toBe(3600);
       expect(result.user.email).toBe('test@demo.amdox.com');
-      expect(mockUserRepository.updateLastLogin).toHaveBeenCalledWith(
-        'user-id-123',
-      );
+      expect(mockUserRepository.updateLastLogin).toHaveBeenCalledWith('user-id-123');
     });
 
     it('should throw UnauthorizedException for invalid credentials', async () => {
@@ -140,17 +138,13 @@ describe('AuthService', () => {
         text: () => Promise.resolve('invalid_grant'),
       });
 
-      await expect(service.login(loginDto)).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
     });
 
     it('should throw UnauthorizedException when Keycloak is unreachable', async () => {
       mockFetch.mockRejectedValueOnce(new Error('ECONNREFUSED'));
 
-      await expect(service.login(loginDto)).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
     });
   });
 
@@ -168,15 +162,11 @@ describe('AuthService', () => {
           firstName: 'Test',
           lastName: 'User',
           tenantId: 'tenant-id-123',
-          userRoles: [
-            { role: { name: 'tenant_admin' } },
-          ],
+          userRoles: [{ role: { name: 'tenant_admin' } }],
         },
       };
 
-      mockPrismaService.refreshToken.findFirst.mockResolvedValueOnce(
-        storedToken,
-      );
+      mockPrismaService.refreshToken.findFirst.mockResolvedValueOnce(storedToken);
       mockPrismaService.refreshToken.update.mockResolvedValueOnce({
         ...storedToken,
         isRevoked: true,
@@ -198,9 +188,7 @@ describe('AuthService', () => {
     it('should throw UnauthorizedException for invalid refresh token', async () => {
       mockPrismaService.refreshToken.findFirst.mockResolvedValueOnce(null);
 
-      await expect(service.refresh('invalid-token')).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(service.refresh('invalid-token')).rejects.toThrow(UnauthorizedException);
     });
 
     it('should throw UnauthorizedException for expired refresh token', async () => {
@@ -210,12 +198,15 @@ describe('AuthService', () => {
         userId: 'user-id-123',
         expiresAt: new Date(Date.now() - 86400000), // 1 day ago (expired)
         isRevoked: false,
-        user: { id: 'user-id-123', email: 'test@demo.amdox.com', tenantId: 'tenant-id-123', userRoles: [] },
+        user: {
+          id: 'user-id-123',
+          email: 'test@demo.amdox.com',
+          tenantId: 'tenant-id-123',
+          userRoles: [],
+        },
       });
 
-      await expect(service.refresh('expired-token')).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(service.refresh('expired-token')).rejects.toThrow(UnauthorizedException);
     });
   });
 
@@ -223,9 +214,7 @@ describe('AuthService', () => {
     it('should revoke a specific refresh token', async () => {
       await service.logout('user-id-123', 'specific-token');
 
-      expect(
-        mockPrismaService.refreshToken.updateMany,
-      ).toHaveBeenCalledWith({
+      expect(mockPrismaService.refreshToken.updateMany).toHaveBeenCalledWith({
         where: {
           userId: 'user-id-123',
           token: 'specific-token',
@@ -238,9 +227,7 @@ describe('AuthService', () => {
     it('should revoke all refresh tokens when no specific token provided', async () => {
       await service.logout('user-id-123');
 
-      expect(
-        mockPrismaService.refreshToken.updateMany,
-      ).toHaveBeenCalledWith({
+      expect(mockPrismaService.refreshToken.updateMany).toHaveBeenCalledWith({
         where: {
           userId: 'user-id-123',
           isRevoked: false,

@@ -45,7 +45,7 @@ export class TenantIsolationGuard implements CanActivate {
     if (userTenantId && userTenantId !== tenantId) {
       this.logger.error(
         `🚨 TENANT ISOLATION VIOLATION: User ${user.sub || user.id} ` +
-        `(tenant: ${userTenantId}) attempted to access tenant: ${tenantId}`,
+          `(tenant: ${userTenantId}) attempted to access tenant: ${tenantId}`,
       );
       throw new ForbiddenException('Cross-tenant access denied');
     }
@@ -54,7 +54,7 @@ export class TenantIsolationGuard implements CanActivate {
     if (request.body?.tenantId && request.body.tenantId !== tenantId) {
       this.logger.error(
         `🚨 TENANT INJECTION ATTEMPT: User ${user.sub || user.id} ` +
-        `tried to inject tenantId ${request.body.tenantId} (actual: ${tenantId})`,
+          `tried to inject tenantId ${request.body.tenantId} (actual: ${tenantId})`,
       );
       // Override with correct tenantId
       request.body.tenantId = tenantId;

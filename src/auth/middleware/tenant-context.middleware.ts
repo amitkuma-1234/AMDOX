@@ -36,9 +36,7 @@ export class TenantContextMiddleware implements NestMiddleware {
       const queryTenantId = req.query.tenantId as string;
       if (queryTenantId) {
         tenantId = queryTenantId;
-        this.logger.debug(
-          `Tenant ID from query param (dev only): ${tenantId}`,
-        );
+        this.logger.debug(`Tenant ID from query param (dev only): ${tenantId}`);
       }
     }
 

@@ -65,9 +65,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
    * Returns the user payload that gets attached to request.user.
    */
   async validate(payload: JwtPayload): Promise<JwtPayload> {
-    this.logger.debug(
-      `JWT validated for user: ${payload.sub} (tenant: ${payload.tenant_id})`,
-    );
+    this.logger.debug(`JWT validated for user: ${payload.sub} (tenant: ${payload.tenant_id})`);
 
     // Ensure required claims are present
     if (!payload.sub) {

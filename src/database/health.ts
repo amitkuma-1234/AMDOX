@@ -21,11 +21,13 @@ export async function checkDatabaseHealth(prisma: PrismaService): Promise<{
     const status = responseTime > 1000 ? 'degraded' : 'healthy';
 
     // Check connection pool
-    const poolStats = await prisma.$queryRaw<Array<{
-      active: number;
-      idle: number;
-      max: number;
-    }>>`
+    const poolStats = await prisma.$queryRaw<
+      Array<{
+        active: number;
+        idle: number;
+        max: number;
+      }>
+    >`
       SELECT 
         count(*) FILTER (WHERE state = 'active') as active,
         count(*) FILTER (WHERE state = 'idle') as idle,

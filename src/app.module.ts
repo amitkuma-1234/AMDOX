@@ -37,7 +37,7 @@ import { TenantContextMiddleware } from './auth/middleware/tenant-context.middle
           {
             name: 'auth',
             ttl: 60000, // 1 minute
-            limit: 10,  // 10 auth requests per minute
+            limit: 10, // 10 auth requests per minute
           },
         ],
       }),
@@ -62,12 +62,6 @@ import { TenantContextMiddleware } from './auth/middleware/tenant-context.middle
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(TenantContextMiddleware)
-      .exclude(
-        'health/(.*)',
-        'api-docs(.*)',
-      )
-      .forRoutes('*');
+    consumer.apply(TenantContextMiddleware).exclude('health/(.*)', 'api-docs(.*)').forRoutes('*');
   }
 }

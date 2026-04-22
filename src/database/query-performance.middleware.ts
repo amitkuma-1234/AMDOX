@@ -54,11 +54,7 @@ export class QueryPerformanceMonitor {
   /**
    * Record query metrics and log slow queries.
    */
-  private recordMetrics(
-    model: string | undefined,
-    action: string,
-    duration: number,
-  ): void {
+  private recordMetrics(model: string | undefined, action: string, duration: number): void {
     const isSlow = duration >= this.slowQueryThreshold;
     const isVerySlow = duration >= this.verySlowQueryThreshold;
 
@@ -78,13 +74,9 @@ export class QueryPerformanceMonitor {
 
     // Log warnings
     if (isVerySlow) {
-      this.logger.error(
-        `🔴 Very slow query: ${model}.${action} took ${duration}ms`,
-      );
+      this.logger.error(`🔴 Very slow query: ${model}.${action} took ${duration}ms`);
     } else if (isSlow) {
-      this.logger.warn(
-        `🟡 Slow query: ${model}.${action} took ${duration}ms`,
-      );
+      this.logger.warn(`🟡 Slow query: ${model}.${action} took ${duration}ms`);
     }
   }
 
@@ -101,10 +93,8 @@ export class QueryPerformanceMonitor {
     const totalQueries = this.metrics.length;
     const slowQueries = this.metrics.filter((m) => m.slow).length;
     const totalDuration = this.metrics.reduce((sum, m) => sum + m.duration, 0);
-    const averageDuration =
-      totalQueries > 0 ? Math.round(totalDuration / totalQueries) : 0;
-    const maxDuration =
-      totalQueries > 0 ? Math.max(...this.metrics.map((m) => m.duration)) : 0;
+    const averageDuration = totalQueries > 0 ? Math.round(totalDuration / totalQueries) : 0;
+    const maxDuration = totalQueries > 0 ? Math.max(...this.metrics.map((m) => m.duration)) : 0;
 
     const queriesByModel: Record<string, number> = {};
     for (const metric of this.metrics) {

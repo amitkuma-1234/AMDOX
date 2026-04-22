@@ -58,10 +58,7 @@ export abstract class BaseRepository<
   /**
    * Find all records with pagination, tenant filtering, and optional soft-delete inclusion.
    */
-  async findAll(
-    tenantId: string,
-    options: BaseQueryOptions = {},
-  ): Promise<PaginatedResult<T>> {
+  async findAll(tenantId: string, options: BaseQueryOptions = {}): Promise<PaginatedResult<T>> {
     const {
       page = 1,
       pageSize = 20,
@@ -182,10 +179,7 @@ export abstract class BaseRepository<
   /**
    * Create multiple records in a batch.
    */
-  async createMany(
-    tenantId: string,
-    data: CreateInput[],
-  ): Promise<{ count: number }> {
+  async createMany(tenantId: string, data: CreateInput[]): Promise<{ count: number }> {
     this.logger.debug(
       `Batch creating ${data.length} ${this.modelName} records for tenant ${tenantId}`,
     );
@@ -198,11 +192,7 @@ export abstract class BaseRepository<
   /**
    * Update a record by ID with tenant isolation.
    */
-  async update(
-    id: string,
-    tenantId: string,
-    data: UpdateInput,
-  ): Promise<T | null> {
+  async update(id: string, tenantId: string, data: UpdateInput): Promise<T | null> {
     // Verify the record belongs to the tenant
     const existing = await this.findById(id, tenantId);
     if (!existing) {
@@ -271,10 +261,7 @@ export abstract class BaseRepository<
   /**
    * Count records matching a filter.
    */
-  async count(
-    tenantId: string,
-    filter: Record<string, any> = {},
-  ): Promise<number> {
+  async count(tenantId: string, filter: Record<string, any> = {}): Promise<number> {
     return this.getDelegate().count({
       where: {
         ...filter,
@@ -287,10 +274,7 @@ export abstract class BaseRepository<
   /**
    * Check if a record exists.
    */
-  async exists(
-    tenantId: string,
-    filter: Record<string, any>,
-  ): Promise<boolean> {
+  async exists(tenantId: string, filter: Record<string, any>): Promise<boolean> {
     const count = await this.getDelegate().count({
       where: {
         ...filter,

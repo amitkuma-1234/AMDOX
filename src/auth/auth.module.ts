@@ -40,13 +40,6 @@ import { UserRepository } from '../repositories/user.repository';
     AbacGuard,
     UserRepository,
   ],
-  exports: [
-    AuthService,
-    JwtStrategy,
-    RolesGuard,
-    TenantIsolationGuard,
-    AbacGuard,
-    UserRepository,
-  ],
+  exports: [AuthService, JwtStrategy, RolesGuard, TenantIsolationGuard, AbacGuard, UserRepository],
 })
 export class AuthModule {}

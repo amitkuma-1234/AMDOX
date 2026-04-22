@@ -33,17 +33,19 @@ async function bootstrap() {
   });
 
   // ── Security ────────────────────────────────────────────────
-  app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", 'data:', 'validator.swagger.io'],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:', 'validator.swagger.io'],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+        },
       },
-    },
-    crossOriginEmbedderPolicy: false,
-  }));
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
 
   // ── Compression ─────────────────────────────────────────────
   app.use(compression());
@@ -88,7 +90,7 @@ async function bootstrap() {
     .setTitle('AMDOX ERP Platform API')
     .setDescription(
       'Multi-tenant Enterprise Resource Planning API. ' +
-      'Covers Finance, HR, Inventory, Procurement, and more.',
+        'Covers Finance, HR, Inventory, Procurement, and more.',
     )
     .setVersion('1.0.0')
     .addBearerAuth(

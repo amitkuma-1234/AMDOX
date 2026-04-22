@@ -50,9 +50,7 @@ export const envValidationSchema = Joi.object({
   THROTTLE_LIMIT: Joi.number().integer().default(100),
 
   // Logging
-  LOG_LEVEL: Joi.string()
-    .valid('error', 'warn', 'log', 'debug', 'verbose')
-    .default('debug'),
+  LOG_LEVEL: Joi.string().valid('error', 'warn', 'log', 'debug', 'verbose').default('debug'),
   LOG_FORMAT: Joi.string().valid('pretty', 'json').default('pretty'),
 
   // OpenTelemetry

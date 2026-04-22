@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
 import { Observable, tap } from 'rxjs';
 import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
@@ -24,8 +18,7 @@ export class LoggingInterceptor implements NestInterceptor {
     const response = ctx.getResponse<Response>();
 
     // Generate or extract correlation ID
-    const correlationId =
-      (request.headers['x-request-id'] as string) || uuidv4();
+    const correlationId = (request.headers['x-request-id'] as string) || uuidv4();
     request.headers['x-request-id'] = correlationId;
     response.setHeader('X-Request-ID', correlationId);
 

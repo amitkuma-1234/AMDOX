@@ -92,11 +92,7 @@ export class UserRepository extends BaseRepository<User> {
     tenantId: string,
     options: BaseQueryOptions = {},
   ): Promise<PaginatedResult<User>> {
-    const {
-      page = 1,
-      pageSize = 20,
-      orderBy = { createdAt: 'desc' as const },
-    } = options;
+    const { page = 1, pageSize = 20, orderBy = { createdAt: 'desc' as const } } = options;
 
     const skip = (page - 1) * pageSize;
 

@@ -29,14 +29,7 @@ export class TransactionRepository extends BaseRepository<Transaction> {
       status?: TransactionStatus;
     } & BaseQueryOptions = {},
   ): Promise<PaginatedResult<Transaction>> {
-    const {
-      page = 1,
-      pageSize = 50,
-      startDate,
-      endDate,
-      type,
-      status,
-    } = options;
+    const { page = 1, pageSize = 50, startDate, endDate, type, status } = options;
 
     const skip = (page - 1) * pageSize;
 
@@ -204,10 +197,7 @@ export class TransactionRepository extends BaseRepository<Transaction> {
   /**
    * Void transactions (change status to VOIDED).
    */
-  async voidTransactions(
-    transactionIds: string[],
-    reason?: string,
-  ): Promise<number> {
+  async voidTransactions(transactionIds: string[], reason?: string): Promise<number> {
     const result = await this.prisma.transaction.updateMany({
       where: {
         id: { in: transactionIds },
@@ -216,9 +206,7 @@ export class TransactionRepository extends BaseRepository<Transaction> {
       },
       data: {
         status: 'VOIDED',
-        description: reason
-          ? Prisma.DbNull
-          : undefined,
+        description: reason ? Prisma.DbNull : undefined,
       },
     });
 
@@ -288,9 +276,7 @@ export class TransactionRepository extends BaseRepository<Transaction> {
       balance: number;
     }>
   > {
-    const dateFilter = asOfDate
-      ? Prisma.sql`AND t.posting_date <= ${asOfDate}`
-      : Prisma.empty;
+    const dateFilter = asOfDate ? Prisma.sql`AND t.posting_date <= ${asOfDate}` : Prisma.empty;
 
     return this.prisma.$queryRaw`
       SELECT 

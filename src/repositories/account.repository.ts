@@ -20,10 +20,7 @@ export class AccountRepository extends BaseRepository<Account> {
   /**
    * Find account by GL code within a tenant.
    */
-  async findByGlCode(
-    tenantId: string,
-    glCode: string,
-  ): Promise<Account | null> {
+  async findByGlCode(tenantId: string, glCode: string): Promise<Account | null> {
     return this.prisma.account.findFirst({
       where: {
         tenantId,
@@ -76,10 +73,7 @@ export class AccountRepository extends BaseRepository<Account> {
   /**
    * Find accounts by currency.
    */
-  async findByCurrency(
-    tenantId: string,
-    currency: Currency,
-  ): Promise<Account[]> {
+  async findByCurrency(tenantId: string, currency: Currency): Promise<Account[]> {
     return this.prisma.account.findMany({
       where: {
         tenantId,

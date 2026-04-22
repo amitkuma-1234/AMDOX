@@ -26,10 +26,10 @@ export class AbacGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(
-      PERMISSIONS_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(PERMISSIONS_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
     // If no permissions required, allow access
     if (!requiredPermissions || requiredPermissions.length === 0) {
@@ -68,8 +68,8 @@ export class AbacGuard implements CanActivate {
     if (!hasAllPermissions) {
       this.logger.warn(
         `Permission denied: user ${user.sub || user.id} ` +
-        `with permissions [${userPermissions.join(', ')}] ` +
-        `missing required [${requiredPermissions.join(', ')}]`,
+          `with permissions [${userPermissions.join(', ')}] ` +
+          `missing required [${requiredPermissions.join(', ')}]`,
       );
       throw new ForbiddenException(
         `Insufficient permissions. Required: ${requiredPermissions.join(', ')}`,

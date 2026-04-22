@@ -1,8 +1,8 @@
-import { NestFactory } from "@nestjs/core";
-import { ValidationPipe, VersioningType } from "@nestjs/common";
-import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
-import helmet from "helmet";
-import { AppModule } from "./app.module";
+import { NestFactory } from '@nestjs/core';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -10,15 +10,15 @@ async function bootstrap() {
   // Security
   app.use(helmet());
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
     credentials: true,
   });
 
   // API Versioning
   app.enableVersioning({
     type: VersioningType.URI,
-    defaultVersion: "1",
-    prefix: "api/v",
+    defaultVersion: '1',
+    prefix: 'api/v',
   });
 
   // Global Validation Pipe
@@ -35,15 +35,15 @@ async function bootstrap() {
 
   // Swagger Documentation
   const config = new DocumentBuilder()
-    .setTitle("AMDOX API")
-    .setDescription("AMDOX Intelligent Document Platform API")
-    .setVersion("1.0.0")
+    .setTitle('AMDOX API')
+    .setDescription('AMDOX Intelligent Document Platform API')
+    .setVersion('1.0.0')
     .addBearerAuth()
-    .addTag("health", "Health check endpoints")
+    .addTag('health', 'Health check endpoints')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup("docs", app, document, {
+  SwaggerModule.setup('docs', app, document, {
     swaggerOptions: {
       persistAuthorization: true,
     },
@@ -56,4 +56,7 @@ async function bootstrap() {
   console.log(`📚 Swagger docs at http://localhost:${port}/docs`);
 }
 
-bootstrap();
+bootstrap().catch((err) => {
+  console.error('Error during bootstrap:', err);
+  process.exit(1);
+});

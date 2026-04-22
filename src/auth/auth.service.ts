@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  Logger,
-  BadRequestException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../database/prisma.service';
@@ -35,74 +30,60 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly userRepository: UserRepository,
   ) {
-    this.accessTokenExpiration = configService.get<number>(
-      'JWT_ACCESS_TOKEN_EXPIRATION',
-      3600,
-    );
-    this.refreshTokenExpiration = configService.get<number>(
-      'JWT_REFRESH_TOKEN_EXPIRATION',
-      604800,
-    );
+    this.accessTokenExpiration = configService.get<number>('JWT_ACCESS_TOKEN_EXPIRATION', 3600);
+    this.refreshTokenExpiration = configService.get<number>('JWT_REFRESH_TOKEN_EXPIRATION', 604800);
     this.keycloakBaseUrl = configService.get<string>('KEYCLOAK_BASE_URL')!;
     this.keycloakRealm = configService.get<string>('KEYCLOAK_REALM', 'amdox');
     this.keycloakClientId = configService.get<string>('KEYCLOAK_CLIENT_ID')!;
-    this.keycloakClientSecret = configService.get<string>(
-      'KEYCLOAK_CLIENT_SECRET',
-    )!;
+    this.keycloakClientSecret = configService.get<string>('KEYCLOAK_CLIENT_SECRET')!;
   }
 
   /**
    * Authenticate user via Keycloak and return tokens.
    */
-  async login(loginDto: LoginDto, ipAddress?: string, userAgent?: string): Promise<AuthResponseDto> {
+  async login(
+    loginDto: LoginDto,
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<AuthResponseDto> {
     this.logger.log(`Login attempt for: ${loginDto.email}`);
 
     try {
       // Exchange credentials with Keycloak
-      const keycloakTokens = await this.exchangeCredentials(
-        loginDto.email,
-        loginDto.password,
-      );
+      const keycloakTokens = await this.exchangeCredentials(loginDto.email, loginDto.password);
 
       // Decode Keycloak access token to get user info
-      const keycloakPayload = this.jwtService.decode(
-        keycloakTokens.access_token,
-      ) as any;
+      const keycloakPayload = this.jwtService.decode(keycloakTokens.access_token);
 
       if (!keycloakPayload) {
         throw new UnauthorizedException('Invalid credentials');
       }
 
       // Find or create user in local database
-      let user = await this.userRepository.findByKeycloakId(
-        keycloakPayload.sub,
-      );
+      let user = await this.userRepository.findByKeycloakId(keycloakPayload.sub);
 
       if (!user) {
         // Auto-provision user from Keycloak claims
         const tenantId = keycloakPayload.tenant_id;
         if (!tenantId) {
-          throw new BadRequestException(
-            'User does not have a tenant assignment in Keycloak',
-          );
+          throw new BadRequestException('User does not have a tenant assignment in Keycloak');
         }
 
-        user = await this.prisma.user.create({
-          data: {
-            email: keycloakPayload.email,
-            firstName: keycloakPayload.given_name,
-            lastName: keycloakPayload.family_name,
-            keycloakId: keycloakPayload.sub,
-            tenantId,
-            emailVerifiedAt: keycloakPayload.email_verified
-              ? new Date()
-              : null,
-          },
+        const userData = {
+          email: keycloakPayload.email,
+          firstName: keycloakPayload.given_name,
+          lastName: keycloakPayload.family_name,
+          keycloakId: keycloakPayload.sub,
+          tenantId,
+          emailVerifiedAt: keycloakPayload.email_verified ? new Date() : null,
+        };
+        user = (await this.prisma.user.create({
+          data: userData,
           include: {
             userRoles: { include: { role: true } },
             tenant: true,
           },
-        }) as any;
+        })) as any;
       }
 
       // Update last login
@@ -110,8 +91,9 @@ export class AuthService {
 
       // Get user permissions
       const permissions = await this.userRepository.getPermissions(user!.id);
-      const roles = user!.userRoles?.map((ur: any) => ur.role.name) || keycloakPayload.roles || [];
-
+      // const roles = user!.userRoles?.map((ur: any) => ur.role.name) || keycloakPayload.roles || [];
+      const roles: string[] =
+        user!.userRoles?.map((ur: any) => ur.role.name) || keycloakPayload.roles || [];
       // Generate our own tokens
       const accessToken = await this.generateAccessToken({
         sub: user!.id,
@@ -145,11 +127,13 @@ export class AuthService {
           permissions,
         },
       };
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof UnauthorizedException || error instanceof BadRequestException) {
         throw error;
       }
-      this.logger.error(`Login failed for ${loginDto.email}: ${(error as Error).message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      // this.logger.error(`Login failed for ${loginDto.email}: ${(error as Error).message}`);
+      this.logger.error(`Login failed for ${loginDto.email}: ${errorMessage}`);
       throw new UnauthorizedException('Invalid credentials');
     }
   }
@@ -322,9 +306,7 @@ export class AuthService {
     userAgent?: string,
   ): Promise<string> {
     const tokenValue = uuidv4();
-    const expiresAt = new Date(
-      Date.now() + this.refreshTokenExpiration * 1000,
-    );
+    const expiresAt = new Date(Date.now() + this.refreshTokenExpiration * 1000);
 
     const token = this.jwtService.sign(
       {

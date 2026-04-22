@@ -29,7 +29,10 @@ export class HealthController {
    */
   @Get('live')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Liveness probe', description: 'Returns OK if the service process is running' })
+  @ApiOperation({
+    summary: 'Liveness probe',
+    description: 'Returns OK if the service process is running',
+  })
   @ApiResponse({ status: 200, description: 'Service is alive' })
   async live(): Promise<HealthResponse> {
     return {
@@ -51,7 +54,10 @@ export class HealthController {
    */
   @Get('ready')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Readiness probe', description: 'Returns OK if all dependencies are healthy' })
+  @ApiOperation({
+    summary: 'Readiness probe',
+    description: 'Returns OK if all dependencies are healthy',
+  })
   @ApiResponse({ status: 200, description: 'Service is ready' })
   @ApiResponse({ status: 503, description: 'Service is not ready' })
   async ready(): Promise<HealthResponse> {
@@ -89,7 +95,10 @@ export class HealthController {
    */
   @Get('db')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Database health check', description: 'Verifies PostgreSQL connectivity and query execution' })
+  @ApiOperation({
+    summary: 'Database health check',
+    description: 'Verifies PostgreSQL connectivity and query execution',
+  })
   @ApiResponse({ status: 200, description: 'Database is healthy' })
   @ApiResponse({ status: 503, description: 'Database is unhealthy' })
   async db(): Promise<HealthResponse> {
@@ -169,7 +178,10 @@ export class HealthController {
    */
   @Get('es')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Elasticsearch health check', description: 'Verifies Elasticsearch cluster health' })
+  @ApiOperation({
+    summary: 'Elasticsearch health check',
+    description: 'Verifies Elasticsearch cluster health',
+  })
   @ApiResponse({ status: 200, description: 'Elasticsearch is healthy' })
   @ApiResponse({ status: 503, description: 'Elasticsearch is unhealthy' })
   async es(): Promise<HealthResponse> {

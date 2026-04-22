@@ -11,5 +11,4 @@ export const ROLES_KEY = 'roles';
  *   @Get('admin')
  *   adminOnly() { ... }
  */
-export const RequireRole = (...roles: string[]) =>
-  SetMetadata(ROLES_KEY, roles);
+export const RequireRole = (...roles: string[]) => SetMetadata(ROLES_KEY, roles);
