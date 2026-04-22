@@ -40,7 +40,7 @@
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "./",
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
@@ -55,6 +55,12 @@
     "baseUrl": "./",
     "ignoreDeprecations": "6.0"
   },
+  "include": [
+    "src/**/*.ts",
+    "apps/**/*.ts",
+    "apps/**/*.tsx",
+    "commitlint.config.js"
+  ],
   "exclude": [
     "node_modules",
     "dist",
