@@ -53,13 +53,13 @@ jobs:
         run: npm install
 
       - name: Lint
-        run: pnpm lint
+        run: npm run lint
 
       - name: Format check
-        run: pnpm format:check
+        run: npm format:check
 
       - name: Typecheck
-        run: pnpm typecheck
+        run: npm typecheck
 
   # ----------------------------------------------------------
   # Unit Tests
@@ -88,7 +88,7 @@ jobs:
         run: npm install
 
       - name: Run unit tests
-        run: pnpm test -- --coverage
+        run: npm test -- --coverage
 
       - name: Upload coverage
         if: always()
@@ -156,7 +156,7 @@ jobs:
           DATABASE_URL: postgresql://amdox:amdox_secret@localhost:5432/amdox_test?schema=public
 
       - name: Run integration tests
-        run: pnpm test:integration
+        run: npm run test:integration
         env:
           DATABASE_URL: postgresql://amdox:amdox_secret@localhost:5432/amdox_test?schema=public
           REDIS_URL: redis://localhost:6379
