@@ -9,7 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../database/prisma.service';
 import { UserRepository } from '../repositories/user.repository';
 import { LoginDto, AuthResponseDto } from './dto';
-import { JwtPayload } from './strategies/jwt.strategy';
+// import { JwtPayload } from './strategies/jwt.strategy';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
