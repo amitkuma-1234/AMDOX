@@ -23,7 +23,7 @@
     // Fix for TS4111 (Property access errors)
     "noPropertyAccessFromIndexSignature": false,
     // Silence deprecation warning from previous step
-    "ignoreDeprecations": "5.0",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": [
         "./src/*"
