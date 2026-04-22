@@ -59,6 +59,8 @@
     "src/**/*.ts",
     "apps/**/*.ts",
     "apps/**/*.tsx",
+    "test/**/*.ts",
+    "test/**/*.e2e-spec.ts",
     "commitlint.config.js"
   ],
   "exclude": [
