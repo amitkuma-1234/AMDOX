@@ -41,7 +41,7 @@
 - [x] `src/hr/services/hr.service.ts`
 - [x] `src/hr/services/payroll.service.ts`
 - [x] `src/hr/processors/payroll.processor.ts`
-- [ ] `src/hr/templates/payslip.html`
+- [x] `src/hr/templates/payslip.html`
 - [x] DTOs: employee, leave, payroll-run, contract
 - [x] Repositories: employee, leave, payroll-run
 
@@ -55,8 +55,8 @@
 - [x] Repositories: purchase-order, goods-receipt, inventory, stock-movement, vendor
 
 ## Step 5: Integration Tests
-- [ ] `test/integration/finance.integration.spec.ts`
-- [ ] `test/integration/ap-ar.integration.spec.ts`
-- [ ] `test/integration/payroll.integration.spec.ts`
-- [ ] `test/integration/scm.integration.spec.ts`
-- [ ] Build verification
+- [x] `test/integration/finance.integration.spec.ts`
+- [x] `test/integration/ap-ar.integration.spec.ts`
+- [x] `test/integration/payroll.integration.spec.ts`
+- [x] `test/integration/scm.integration.spec.ts`
+- [x] Build verification

@@ -1,21 +1,7 @@
 {
-<<<<<<< HEAD
-  "singleQuote": true,
-  "trailingComma": "all",
-  "printWidth": 100,
-  "tabWidth": 2,
-  "semi": true,
-  "bracketSpacing": true,
-  "arrowParens": "always",
-  "endOfLine": "lf"
-=======
-<<<<<<< HEAD
-  "singleQuote": true,
-  "trailingComma": "all"
-=======
   "$schema": "https://json.schemastore.org/prettierrc",
   "semi": true,
-  "singleQuote": false,
+  "singleQuote": true,
   "tabWidth": 2,
   "useTabs": false,
   "trailingComma": "all",
@@ -38,6 +24,4 @@
       }
     }
   ]
->>>>>>> ad4764060fe71460b97cd325cf64002388ffea0d
->>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
 }

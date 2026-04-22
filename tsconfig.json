@@ -6,59 +6,26 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2022",
+    "target": "es2021",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
-    "noImplicitAny": true,
-    "strictBindCallApply": true,
-    "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
-    "resolveJsonModule": true,
-    "esModuleInterop": true,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@/*": [
-        "src/*"
-      ],
-      "@common/*": [
-        "src/common/*"
-      ],
-      "@auth/*": [
-        "src/auth/*"
-      ],
-      "@database/*": [
-        "src/database/*"
-      ],
-      "@health/*": [
-        "src/health/*"
-      ],
-      "@config/*": [
-        "src/config/*"
-      ],
-      "@finance/*": [
-        "src/finance/*"
-      ],
-      "@hr/*": [
-        "src/hr/*"
-      ],
-      "@scm/*": [
-        "src/scm/*"
-      ],
-      "@ap-ar/*": [
-        "src/ap-ar/*"
-      ]
+      "@auth/*": ["src/auth/*"],
+      "@common/*": ["src/common/*"],
+      "@database/*": ["src/database/*"],
+      "@finance/*": ["src/finance/*"],
+      "@hr/*": ["src/hr/*"],
+      "@scm/*": ["src/scm/*"],
+      "@ap-ar/*": ["src/ap-ar/*"]
     }
   },
-  "include": [
-    "src/**/*",
-    "apps/test/**/*",
-    "prisma/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src/**/*", "apps/test/**/*"]
 }

@@ -11,6 +11,7 @@ import Redis from 'ioredis';
 import { PrismaService } from '../database/prisma.service';
 import { UserRepository } from '../database/repositories/user.repository';
 import { LoginDto, AuthResponseDto } from './dto';
+
 import { v4 as uuidv4 } from 'uuid';
 import * as crypto from 'crypto';
 

@@ -19,7 +19,6 @@ concurrency:
 
 env:
   NODE_VERSION: "20"
-  PNPM_VERSION: "9.15.4"
   PYTHON_VERSION: "3.12"
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: ${{ vars.TURBO_TEAM }}
@@ -38,28 +37,28 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: "npm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm install
 
+      - name: Fix permissions
+        run: |
+          chmod +x node_modules/.bin/eslint
+          chmod +x node_modules/.bin/prettier
+        
       - name: Lint
-        run: pnpm lint
+        run: npm run lint
 
       - name: Format check
-        run: pnpm format:check
+        run: npm run format:check
 
       - name: Typecheck
-        run: pnpm typecheck
+        run: npm run typecheck
 
   # ----------------------------------------------------------
   # Unit Tests
@@ -73,22 +72,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: "npm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm install
 
       - name: Run unit tests
-        run: pnpm test -- --coverage
+        run: npm test -- --coverage
 
       - name: Upload coverage
         if: always()
@@ -133,36 +127,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: "npm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm install
 
       - name: Generate Prisma client
-        run: pnpm db:generate
+        run: npm run db:generate
 
       - name: Push database schema
-        run: pnpm db:push
+        run: npm run db:push
         env:
           DATABASE_URL: postgresql://amdox:amdox_secret@localhost:5432/amdox_test?schema=public
 
       - name: Run integration tests
-        run: pnpm test:integration
+        run: npm run test:integration
         env:
           DATABASE_URL: postgresql://amdox:amdox_secret@localhost:5432/amdox_test?schema=public
           REDIS_URL: redis://localhost:6379
 
   # ----------------------------------------------------------
-  # Python ML Service Tests
+  # Python ML Service Tests (Your environment is set to 3.12)
   # ----------------------------------------------------------
   test-ml:
     name: ML Service Tests
@@ -211,22 +200,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: ${{ env.PNPM_VERSION }}
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
+          cache: "npm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm install
 
       - name: Build all packages
-        run: pnpm build
+        run: npm run build
 
   # ----------------------------------------------------------
   # Docker Build & Push
@@ -259,14 +243,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-
-      # Uncomment for AWS ECR:
-      # - name: Login to Amazon ECR
-      #   uses: aws-actions/amazon-ecr-login@v2
-      #   env:
-      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     AWS_REGION: ${{ vars.AWS_REGION }}
 
       - name: Docker meta
         id: meta
@@ -382,6 +358,7 @@ jobs:
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
+
           payload: |
             {
               "attachments": [

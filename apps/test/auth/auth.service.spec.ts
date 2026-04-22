@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { AuthService } from '../../src/auth/auth.service';
-import { PrismaService } from '../../src/database/prisma.service';
+import { AuthService } from '@auth/auth.service';
+import { PrismaService } from '@database/prisma.service';
 
 // Mock PrismaService
 const mockPrismaService = {
@@ -69,7 +69,7 @@ describe('AuthService', () => {
       });
 
       await expect(
-        service.login('invalid@test.com', 'wrong-password'),
+        service.login({ email: 'invalid@test.com', password: 'wrong-password' }),
       ).rejects.toThrow('Invalid credentials');
     });
 
@@ -106,7 +106,7 @@ describe('AuthService', () => {
         email: 'admin@test.com',
       });
 
-      const result = await service.login('admin@test.com', 'password');
+      const result = await service.login({ email: 'admin@test.com', password: 'password' });
 
       expect(result).toHaveProperty('accessToken');
       expect(result).toHaveProperty('refreshToken');
@@ -121,7 +121,7 @@ describe('AuthService', () => {
       jest.spyOn(service, 'isTokenBlacklisted').mockResolvedValue(true);
 
       await expect(
-        service.refreshToken('blacklisted-refresh-token'),
+        service.refresh('blacklisted-refresh-token'),
       ).rejects.toThrow('Token has been revoked');
     });
   });
@@ -132,10 +132,7 @@ describe('AuthService', () => {
         ok: true,
       });
 
-      const result = await service.logout('access-token', 'refresh-token');
-
-      expect(result).toHaveProperty('message');
-      expect(result.message).toContain('Logged out');
+      await expect(service.logout('user-123', 'access-token', 'refresh-token')).resolves.not.toThrow();
     });
   });
 

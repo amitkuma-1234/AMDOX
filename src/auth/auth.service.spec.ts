@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../database/prisma.service';
-import { UserRepository } from '../repositories/user.repository';
+import { UserRepository } from '@database/repositories/user.repository';
 
 // Mock implementations
 const mockConfigService = {
@@ -221,7 +221,7 @@ describe('AuthService', () => {
 
   describe('logout', () => {
     it('should revoke a specific refresh token', async () => {
-      await service.logout('user-id-123', 'specific-token');
+      await service.logout('user-id-123', undefined, 'specific-token');
 
       expect(
         mockPrismaService.refreshToken.updateMany,
