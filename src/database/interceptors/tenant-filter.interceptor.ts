@@ -1,19 +1,3 @@
-<<<<<<< HEAD
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
-import { Observable } from 'rxjs';
-
-/**
- * NestJS interceptor that auto-injects tenantId into Prisma queries.
- * Applied at the controller level for tenant-scoped endpoints.
- *
- * This interceptor works alongside the BaseRepository pattern
- * to enforce tenant isolation at the data access layer.
- *
- * NOTE: For most queries, tenantId filtering is handled directly
- * in repositories via the BaseRepository methods. This interceptor
- * provides an additional safety net at the controller level by
- * ensuring tenantId is always available in the request context.
-=======
 import {
   Injectable,
   NestInterceptor,
@@ -24,12 +8,10 @@ import {
 import { Observable } from 'rxjs';
 
 /**
- * TenantFilterInterceptor automatically injects tenantId
- * from the request context into any query body that expects it.
+ * TenantFilterInterceptor ensures that the tenantId is propagated from the request context
+ * to the downstream services and repositories.
  *
- * This ensures all database operations are scoped to the current tenant
- * without requiring explicit tenant filtering in every controller.
->>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
+ * This provides a safety net to ensure all database operations are scoped to the current tenant.
  */
 @Injectable()
 export class TenantFilterInterceptor implements NestInterceptor {
@@ -37,45 +19,28 @@ export class TenantFilterInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const request = context.switchToHttp().getRequest();
-<<<<<<< HEAD
-    const user = request.user;
-
-    if (user?.tenantId) {
-      // Ensure tenantId is available in request for downstream use
-      request.tenantId = user.tenantId;
-    } else if (!request.tenantId) {
-      this.logger.warn(
-        `No tenant context found for request: ${request.method} ${request.url}`,
-      );
-    }
-
-=======
     const tenantId = request.tenantId;
 
     if (!tenantId) {
-      this.logger.warn('No tenantId found in request context');
+      // For public routes, tenantId might be missing.
+      // If the route is protected by TenantIsolationGuard, it will have already errored.
       return next.handle();
     }
 
-    // Inject tenantId into request body if it exists
+    // Inject tenantId into request body/query for automatic DTO population if needed
     if (request.body && typeof request.body === 'object') {
+      // Only inject if the model expects tenantId
       request.body.tenantId = tenantId;
     }
 
-    // Inject tenantId into query params for GET requests
-    if (request.query && typeof request.query === 'object') {
-      request.query.tenantId = tenantId;
-    }
-
-    // Store tenantId on request for repository access
+    // Store a formal tenant context for repository access
     request.tenantContext = {
       tenantId,
       appliedAt: new Date().toISOString(),
     };
 
-    this.logger.debug(`Tenant filter applied: ${tenantId}`);
+    this.logger.debug(`Tenant filter context applied: ${tenantId}`);
 
->>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
     return next.handle();
   }
 }

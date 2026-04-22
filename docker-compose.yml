@@ -1,62 +1,12 @@
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
 version: '3.9'
 
-services:
-  # ──────────────────────────────────────────────
-<<<<<<< HEAD
-  # PostgreSQL 16
-=======
-  # PostgreSQL 16 — Primary Application Database
->>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
-  # ──────────────────────────────────────────────
-  postgres:
-    image: postgres:16-alpine
-    container_name: amdox-postgres
-    restart: unless-stopped
-    environment:
-<<<<<<< HEAD
-      POSTGRES_USER: amdox
-      POSTGRES_PASSWORD: amdox_secret_dev
-      POSTGRES_DB: amdox_db
-    ports:
-      - '5432:5432'
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U amdox -d amdox_db']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - amdox-network
-
-  # ──────────────────────────────────────────────
-  # Redis 7
-=======
-      POSTGRES_DB: ${POSTGRES_DB:-amdox}
-      POSTGRES_USER: ${POSTGRES_USER:-amdox_admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-amdox_secret_2024}
-      PGDATA: /var/lib/postgresql/data/pgdata
-    ports:
-      - '${POSTGRES_PORT:-5432}:5432'
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
-=======
-# ============================================================
-# AMDOX Docker Compose — Development Stack
-# ============================================================
-# Usage: docker compose up -d
-# ============================================================
+# ─────────────────────────────────────────────────────────────
+# AMDOX ERP Platform — Infrastructure Stack
+# Services: PostgreSQL 17, Redis 8, Keycloak 25, Elasticsearch 8
+# ─────────────────────────────────────────────────────────────
 
 services:
-  # ----------------------------------------------------------
-  # PostgreSQL 17
-  # ----------------------------------------------------------
+  # ── Primary Application Database ──────────────────────────
   postgres:
     image: postgres:17-alpine
     container_name: amdox-postgres
@@ -72,7 +22,6 @@ services:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-amdox} -d ${DB_NAME:-amdox}"]
->>>>>>> ad4764060fe71460b97cd325cf64002388ffea0d
       interval: 10s
       timeout: 5s
       retries: 5
@@ -80,66 +29,23 @@ services:
     networks:
       - amdox-network
 
-<<<<<<< HEAD
-  # ──────────────────────────────────────────────
-  # Redis 7 — Caching, Rate Limiting, Token Blacklist
->>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
-  # ──────────────────────────────────────────────
-  redis:
-    image: redis:7-alpine
-    container_name: amdox-redis
-    restart: unless-stopped
-<<<<<<< HEAD
-    command: redis-server --requirepass redis_secret_dev --maxmemory 256mb --maxmemory-policy allkeys-lru
-    ports:
-      - '6379:6379'
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ['CMD', 'redis-cli', '-a', 'redis_secret_dev', 'ping']
-=======
-    command: >
-      redis-server
-      --requirepass ${REDIS_PASSWORD:-amdox_redis_2024}
-      --maxmemory 256mb
-      --maxmemory-policy allkeys-lru
-      --appendonly yes
-      --appendfsync everysec
-    ports:
-      - '${REDIS_PORT:-6379}:6379'
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD:-amdox_redis_2024}', 'ping']
->>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - amdox-network
-
-  # ──────────────────────────────────────────────
-<<<<<<< HEAD
-  # Keycloak 25
-  # ──────────────────────────────────────────────
-=======
-  # Keycloak 25 — Identity & Access Management
-  # ──────────────────────────────────────────────
-=======
-  # ----------------------------------------------------------
-  # Redis 8
-  # ----------------------------------------------------------
+  # ── Caching & Async Processing (BullMQ) ───────────────────
   redis:
     image: redis:8-alpine
     container_name: amdox-redis
     restart: unless-stopped
     ports:
-      - "${REDIS_DOCKER_PORT:-6379}:6379"
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+      - "${REDIS_PORT:-6379}:6379"
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:-amdox_redis_secret}
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-amdox_redis_secret}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -147,9 +53,7 @@ services:
     networks:
       - amdox-network
 
-  # ----------------------------------------------------------
-  # Keycloak 25 (with PostgreSQL backend)
-  # ----------------------------------------------------------
+  # ── Keycloak Persistence ──────────────────────────────────
   keycloak-db:
     image: postgres:17-alpine
     container_name: amdox-keycloak-db
@@ -169,146 +73,35 @@ services:
     networks:
       - amdox-network
 
->>>>>>> ad4764060fe71460b97cd325cf64002388ffea0d
->>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
+  # ── Identity & Access Management (Keycloak) ───────────────
   keycloak:
     image: quay.io/keycloak/keycloak:25.0
     container_name: amdox-keycloak
     restart: unless-stopped
-<<<<<<< HEAD
-    command:
-      - start-dev
-      - --import-realm
-    environment:
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/amdox_db
-      KC_DB_USERNAME: amdox
-      KC_DB_PASSWORD: amdox_secret_dev
-      KC_DB_SCHEMA: keycloak
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin_secret_dev
-      KC_HEALTH_ENABLED: 'true'
-      KC_METRICS_ENABLED: 'true'
-      KC_HTTP_PORT: 8080
-      KC_HOSTNAME_STRICT: 'false'
-      KC_PROXY: edge
-    ports:
-      - '8080:8080'
-    volumes:
-      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
-=======
-<<<<<<< HEAD
-    command: start --import-realm
-    environment:
-      # Admin credentials
-      KC_BOOTSTRAP_ADMIN_USERNAME: ${KC_ADMIN_USER:-admin}
-      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:-admin_secret_2024}
-      # Database
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres:5432/${KC_DB_NAME:-keycloak}
-      KC_DB_USERNAME: ${POSTGRES_USER:-amdox_admin}
-      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-amdox_secret_2024}
-      # HTTP settings
-      KC_HTTP_ENABLED: 'true'
-      KC_HTTP_PORT: 8080
-      KC_HOSTNAME_STRICT: 'false'
-      KC_PROXY_HEADERS: xforwarded
-      # Health
-      KC_HEALTH_ENABLED: 'true'
-      KC_METRICS_ENABLED: 'true'
-      # Features
-      KC_FEATURES: token-exchange,admin-fine-grained-authz
-    ports:
-      - '${KC_PORT:-8080}:8080'
-    volumes:
-      - ./keycloak/realm-config.json:/opt/keycloak/data/import/amdox-realm.json:ro
->>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
-    depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-<<<<<<< HEAD
-      test: ['CMD-SHELL', 'exec 3<>/dev/tcp/localhost/8080 && echo -e "GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n" >&3 && cat <&3 | grep -q "UP"']
-      interval: 30s
-      timeout: 10s
-      retries: 10
-      start_period: 60s
-=======
-      test: >
-        bash -c 'exec 3<>/dev/tcp/localhost/8080 && echo -e "GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n" >&3 && cat <&3 | grep -q "200 OK"'
-      interval: 30s
-      timeout: 10s
-      retries: 10
-      start_period: 120s
->>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
-    networks:
-      - amdox-network
-
-  # ──────────────────────────────────────────────
-<<<<<<< HEAD
-  # Elasticsearch 8
-=======
-  # Elasticsearch 8 — Search & Analytics
->>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
-  # ──────────────────────────────────────────────
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
-    container_name: amdox-elasticsearch
-    restart: unless-stopped
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-<<<<<<< HEAD
-      - xpack.security.http.ssl.enabled=false
-      - ES_JAVA_OPTS=-Xms512m -Xmx512m
-      - cluster.name=amdox-cluster
-    ports:
-      - '9200:9200'
-      - '9300:9300'
-    volumes:
-      - es_data:/usr/share/elasticsearch/data
-    healthcheck:
-      test: ['CMD-SHELL', 'curl -f http://localhost:9200/_cluster/health || exit 1']
-      interval: 15s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-    networks:
-      - amdox-network
-
-=======
-      - xpack.security.enrollment.enabled=false
-      - 'ES_JAVA_OPTS=-Xms512m -Xmx512m'
-    ports:
-      - '${ES_PORT:-9200}:9200'
-    volumes:
-      - es_data:/usr/share/elasticsearch/data
-    healthcheck:
-      test: ['CMD-SHELL', 'curl -s http://localhost:9200/_cluster/health | grep -q ''"status":"green"\|"status":"yellow"''']
-=======
-    ports:
-      - "${KEYCLOAK_PORT:-8080}:8080"
+    command: start-dev --import-realm
     environment:
       KC_DB: postgres
       KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: keycloak_secret
       KC_HOSTNAME: localhost
-      KC_HOSTNAME_PORT: ${KEYCLOAK_PORT:-8080}
-      KC_HOSTNAME_STRICT: false
-      KC_HOSTNAME_STRICT_HTTPS: false
-      KC_HTTP_ENABLED: true
-      KC_HEALTH_ENABLED: true
-      KC_METRICS_ENABLED: true
-      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN_USER:-admin}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
-    command: start-dev
+      KC_HOSTNAME_PORT: ${KC_PORT:-8080}
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+      KC_METRICS_ENABLED: "true"
+      KEYCLOAK_ADMIN: ${KC_ADMIN_USER:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KC_ADMIN_PASSWORD:-admin_secret}
+    ports:
+      - "${KC_PORT:-8080}:8080"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
     depends_on:
       keycloak-db:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && cat <&3 | grep -q '200'"]
->>>>>>> ad4764060fe71460b97cd325cf64002388ffea0d
       interval: 30s
       timeout: 10s
       retries: 5
@@ -316,17 +109,13 @@ services:
     networks:
       - amdox-network
 
-<<<<<<< HEAD
-=======
-  # ----------------------------------------------------------
-  # Elasticsearch 8.x
-  # ----------------------------------------------------------
+  # ── Search & Analytics (Elasticsearch) ────────────────────
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
     container_name: amdox-elasticsearch
     restart: unless-stopped
     ports:
-      - "${ELASTICSEARCH_PORT:-9200}:9200"
+      - "${ES_PORT:-9200}:9200"
       - "9300:9300"
     environment:
       - discovery.type=single-node
@@ -344,7 +133,7 @@ services:
         soft: 65536
         hard: 65536
     volumes:
-      - elasticsearch_data:/usr/share/elasticsearch/data
+      - es_data:/usr/share/elasticsearch/data
     healthcheck:
       test: ["CMD-SHELL", "curl -fsSL http://localhost:9200/_cluster/health || exit 1"]
       interval: 30s
@@ -354,37 +143,18 @@ services:
     networks:
       - amdox-network
 
-# ============================================================
-# Volumes
-# ============================================================
->>>>>>> ad4764060fe71460b97cd325cf64002388ffea0d
->>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
 volumes:
   postgres_data:
     driver: local
   redis_data:
     driver: local
-<<<<<<< HEAD
-  es_data:
-    driver: local
-
-=======
-<<<<<<< HEAD
-  es_data:
-    driver: local
-
-=======
   keycloak_db_data:
     driver: local
-  elasticsearch_data:
+  es_data:
     driver: local
 
-# ============================================================
-# Networks
-# ============================================================
->>>>>>> ad4764060fe71460b97cd325cf64002388ffea0d
->>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
 networks:
   amdox-network:
     driver: bridge
     name: amdox-network
+

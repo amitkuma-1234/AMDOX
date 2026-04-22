@@ -1,33 +1,18 @@
 {
-<<<<<<< HEAD
   "compilerOptions": {
     "module": "commonjs",
-=======
-<<<<<<< HEAD
-  "compilerOptions": {
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "resolvePackageJsonExports": true,
-    "esModuleInterop": true,
-    "isolatedModules": true,
->>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-<<<<<<< HEAD
     "target": "ES2022",
-=======
-    "target": "ES2023",
->>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
     "strictNullChecks": true,
-<<<<<<< HEAD
     "noImplicitAny": true,
     "strictBindCallApply": true,
     "forceConsistentCasingInFileNames": true,
@@ -35,50 +20,45 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "paths": {
-      "@/*": ["src/*"],
-      "@common/*": ["src/common/*"],
-      "@auth/*": ["src/auth/*"],
-      "@database/*": ["src/database/*"],
-      "@health/*": ["src/health/*"],
-      "@config/*": ["src/config/*"]
+      "@/*": [
+        "src/*"
+      ],
+      "@common/*": [
+        "src/common/*"
+      ],
+      "@auth/*": [
+        "src/auth/*"
+      ],
+      "@database/*": [
+        "src/database/*"
+      ],
+      "@health/*": [
+        "src/health/*"
+      ],
+      "@config/*": [
+        "src/config/*"
+      ],
+      "@finance/*": [
+        "src/finance/*"
+      ],
+      "@hr/*": [
+        "src/hr/*"
+      ],
+      "@scm/*": [
+        "src/scm/*"
+      ],
+      "@ap-ar/*": [
+        "src/ap-ar/*"
+      ]
     }
   },
-  "include": ["src/**/*", "test/**/*", "prisma/**/*"],
-  "exclude": ["node_modules", "dist"]
-=======
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": true,
-    "strictBindCallApply": true,
-    "noFallthroughCasesInSwitch": true
-  }
-=======
-  "$schema": "https://json.schemastore.org/tsconfig",
-  "compilerOptions": {
-    "target": "ES2022",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true,
-    "allowJs": true,
-    "checkJs": false,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "forceConsistentCasingInFileNames": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "isolatedModules": true,
-    "skipLibCheck": true,
-    "incremental": true,
-    "composite": false
-  },
-  "exclude": ["node_modules", "dist", "build", ".next", "coverage"]
->>>>>>> ad4764060fe71460b97cd325cf64002388ffea0d
->>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
+  "include": [
+    "src/**/*",
+    "apps/test/**/*",
+    "prisma/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Account, AccountType, Prisma } from '@prisma/client';
+import { Account, AccountType, Prisma, Currency } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 import { BaseRepository } from './base.repository';
 
@@ -61,7 +61,6 @@ export class AccountRepository extends BaseRepository<Account> {
 
   /**
    * Get account balance aggregation by currency for a tenant.
-   * Returns balances grouped by account type and currency.
    */
   async getBalancesByCurrency(tenantId: string) {
     const result = await this.prisma.account.groupBy({
@@ -74,7 +73,7 @@ export class AccountRepository extends BaseRepository<Account> {
     return result.map((group) => ({
       type: group.type,
       currency: group.currency,
-      totalBalance: group._sum.balance,
+      totalBalance: group._sum.balance || new Prisma.Decimal(0),
       accountCount: group._count.id,
     }));
   }
@@ -82,7 +81,7 @@ export class AccountRepository extends BaseRepository<Account> {
   /**
    * Get trial balance — debit and credit totals per account type.
    */
-  async getTrialBalance(tenantId: string, currency: string = 'USD') {
+  async getTrialBalance(tenantId: string, currency: Currency = Currency.USD) {
     const accounts = await this.prisma.account.findMany({
       where: { tenantId, currency, isActive: true },
       include: {
@@ -94,12 +93,13 @@ export class AccountRepository extends BaseRepository<Account> {
     });
 
     return accounts.map((account) => {
-      const debits = account.transactions
-        .filter((t) => t.type === 'DEBIT')
-        .reduce((sum, t) => sum.add(t.amount), new Prisma.Decimal(0));
-      const credits = account.transactions
-        .filter((t) => t.type === 'CREDIT')
-        .reduce((sum, t) => sum.add(t.amount), new Prisma.Decimal(0));
+      const transactions = (account as any).transactions || [];
+      const debits = transactions
+        .filter((t: any) => t.type === 'DEBIT')
+        .reduce((sum: Prisma.Decimal, t: any) => sum.add(t.amount), new Prisma.Decimal(0));
+      const credits = transactions
+        .filter((t: any) => t.type === 'CREDIT')
+        .reduce((sum: Prisma.Decimal, t: any) => sum.add(t.amount), new Prisma.Decimal(0));
 
       return {
         id: account.id,

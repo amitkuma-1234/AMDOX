@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -6,25 +5,9 @@ import { ConfigService } from '@nestjs/config';
 import { passportJwtSecret } from 'jwks-rsa';
 
 /**
- * JWT access token strategy using Keycloak's JWKS endpoint for RS256 verification.
- * Automatically rotates keys without API restarts via JWKS caching.
- */
-=======
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { passportJwtSecret } from 'jwks-rsa';
-
-/**
  * JWT Passport strategy for access token validation.
  * Uses JWKS endpoint from Keycloak to dynamically fetch public keys.
- *
- * Validates:
- * - Token signature (RS256 via JWKS)
- * - Token expiration
- * - Issuer (Keycloak realm URL)
- * - Audience (amdox-api)
+ * Supports RS256 signature verification and claim validation.
  */
 export interface JwtPayload {
   sub: string;
@@ -43,53 +26,19 @@ export interface JwtPayload {
   aud: string | string[];
 }
 
->>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   private readonly logger = new Logger(JwtStrategy.name);
 
   constructor(private readonly configService: ConfigService) {
-<<<<<<< HEAD
-    const jwksUri = configService.get<string>('KEYCLOAK_JWKS_URI');
-=======
-    const jwksUri = configService.get<string>('JWKS_URI')!;
+    const jwksUri = configService.get<string>('KEYCLOAK_JWKS_URI')!;
     const issuer = configService.get<string>('JWT_ISSUER')!;
     const audience = configService.get<string>('JWT_AUDIENCE', 'amdox-api');
->>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       algorithms: ['RS256'],
-<<<<<<< HEAD
-      secretOrKeyProvider: passportJwtSecret({
-        cache: true,
-        rateLimit: true,
-        jwksRequestsPerMinute: 5,
-        jwksUri: jwksUri!,
-      }),
-      issuer: `${configService.get('KEYCLOAK_BASE_URL')}/realms/${configService.get('KEYCLOAK_REALM')}`,
-    });
-  }
-
-  /**
-   * Validate the decoded JWT payload.
-   * Returns the user object that will be attached to request.user.
-   */
-  async validate(payload: Record<string, any>) {
-    if (!payload.sub) {
-      this.logger.warn('JWT payload missing sub claim');
-      throw new UnauthorizedException('Invalid token: missing subject');
-    }
-
-    return {
-      keycloakId: payload.sub,
-      email: payload.email || payload.preferred_username,
-      tenantId: payload.tenant_id,
-      roles: payload.roles || payload.realm_access?.roles || [],
-      permissions: payload.permissions || [],
-      sessionId: payload.session_state,
-=======
       issuer,
       audience,
       secretOrKeyProvider: passportJwtSecret({
@@ -110,36 +59,34 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
    * Validate callback invoked after JWT signature verification.
    * Returns the user payload that gets attached to request.user.
    */
-  async validate(payload: JwtPayload): Promise<JwtPayload> {
+  async validate(payload: JwtPayload): Promise<any> {
     this.logger.debug(
       `JWT validated for user: ${payload.sub} (tenant: ${payload.tenant_id})`,
     );
 
     // Ensure required claims are present
     if (!payload.sub) {
-      throw new Error('JWT missing sub claim');
+      this.logger.warn('JWT payload missing sub claim');
+      throw new UnauthorizedException('Invalid token: missing subject');
     }
 
     if (!payload.tenant_id) {
       this.logger.warn(`JWT for user ${payload.sub} missing tenant_id claim`);
     }
 
+    // Return a unified user object for downstream use
     return {
-      sub: payload.sub,
+      userId: payload.sub,
       email: payload.email,
-      email_verified: payload.email_verified,
-      preferred_username: payload.preferred_username,
-      given_name: payload.given_name,
-      family_name: payload.family_name,
-      tenant_id: payload.tenant_id,
-      tenant_name: payload.tenant_name,
+      emailVerified: payload.email_verified,
+      username: payload.preferred_username,
+      firstName: payload.given_name,
+      lastName: payload.family_name,
+      tenantId: payload.tenant_id,
       roles: payload.roles || [],
       permissions: payload.permissions || [],
-      iat: payload.iat,
-      exp: payload.exp,
-      iss: payload.iss,
-      aud: payload.aud,
->>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
+      issuedAt: payload.iat,
+      expiresAt: payload.exp,
     };
   }
 }

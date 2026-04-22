@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: 'Helvetica', sans-serif; margin: 40px; color: #333; }
+        .header { border-bottom: 2px solid #2c3e50; padding-bottom: 20px; margin-bottom: 30px; }
+        .company-name { font-size: 24px; font-weight: bold; color: #2c3e50; }
+        .payslip-title { font-size: 18px; color: #7f8c8d; margin-top: 5px; }
+        .info-section { display: flex; justify-content: space-between; margin-bottom: 40px; }
+        .info-box { flex: 1; }
+        .info-label { font-size: 12px; color: #95a5a6; text-transform: uppercase; margin-bottom: 5px; }
+        .info-value { font-size: 14px; font-weight: 600; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        th { text-align: left; background-color: #f8f9fa; padding: 12px; font-size: 13px; border-bottom: 1px solid #dee2e6; }
+        td { padding: 12px; font-size: 14px; border-bottom: 1px solid #f1f1f1; }
+        .amount { text-align: right; }
+        .total-row { background-color: #fdfdfe; font-weight: bold; }
+        .net-pay { font-size: 20px; color: #27ae60; font-weight: bold; text-align: right; margin-top: 20px; }
+        .footer { margin-top: 50px; font-size: 11px; color: #bdc3c7; text-align: center; border-top: 1px solid #eee; padding-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company-name">{{companyName}}</div>
+        <div class="payslip-title">Salary Statement - {{periodName}}</div>
+    </div>
+
+    <div class="info-section">
+        <div class="info-box">
+            <div class="info-label">Employee Name</div>
+            <div class="info-value">{{employeeName}}</div>
+            <div class="info-label" style="margin-top: 15px;">Employee Code</div>
+            <div class="info-value">{{employeeCode}}</div>
+        </div>
+        <div class="info-box" style="text-align: right;">
+            <div class="info-label">Pay Period</div>
+            <div class="info-value">{{periodStart}} to {{periodEnd}}</div>
+            <div class="info-label" style="margin-top: 15px;">Payment Date</div>
+            <div class="info-value">{{paymentDate}}</div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Earnings</th>
+                <th class="amount">Amount ({{currency}})</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Basic Salary</td>
+                <td class="amount">{{basicSalary}}</td>
+            </tr>
+            <tr>
+                <td>Allowances</td>
+                <td class="amount">{{allowances}}</td>
+            </tr>
+            <tr class="total-row">
+                <td>Gross Earnings</td>
+                <td class="amount">{{grossEarnings}}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Deductions</th>
+                <th class="amount">Amount ({{currency}})</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Income Tax</td>
+                <td class="amount">{{taxAmount}}</td>
+            </tr>
+            <tr>
+                <td>Other Deductions</td>
+                <td class="amount">{{deductions}}</td>
+            </tr>
+            <tr class="total-row">
+                <td>Total Deductions</td>
+                <td class="amount">{{totalDeductions}}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="net-pay">
+        Net Pay: {{currency}} {{netPay}}
+    </div>
+
+    <div class="footer">
+        This is a computer-generated document and does not require a signature. <br>
+        AMDOX ERP Platform - Secure Payroll Solutions
+    </div>
+</body>
+</html>

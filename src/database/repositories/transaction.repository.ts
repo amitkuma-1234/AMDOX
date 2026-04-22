@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Transaction, TransactionType, Prisma } from '@prisma/client';
+import { Transaction, TransactionType, Prisma, Currency } from '@prisma/client';
 import { PrismaService } from '../prisma.service';
 import { BaseRepository } from './base.repository';
 
@@ -52,7 +52,6 @@ export class TransactionRepository extends BaseRepository<Transaction> {
 
   /**
    * Cursor-based pagination for high-volume transaction lists.
-   * More efficient than offset-based for large datasets.
    */
   async findWithCursor(tenantId: string, options: TransactionCursorOptions = {}) {
     const {
@@ -90,7 +89,7 @@ export class TransactionRepository extends BaseRepository<Transaction> {
 
     const transactions = await this.prisma.transaction.findMany({
       where,
-      take: take + 1, // Fetch one extra to determine if there's a next page
+      take: take + 1,
       ...(cursor && {
         cursor: { id: cursor },
         skip: 1,
@@ -117,36 +116,9 @@ export class TransactionRepository extends BaseRepository<Transaction> {
   }
 
   /**
-   * Get transactions for a specific account within a date range.
-   */
-  async findByAccount(
-    accountId: string,
-    tenantId: string,
-    dateRange?: { from: Date; to: Date },
-  ) {
-    return this.prisma.transaction.findMany({
-      where: {
-        accountId,
-        account: { tenantId },
-        ...(dateRange && {
-          createdAt: {
-            gte: dateRange.from,
-            lte: dateRange.to,
-          },
-        }),
-      },
-      orderBy: { createdAt: 'desc' },
-      include: {
-        journalEntry: { select: { id: true, reference: true, status: true } },
-      },
-    });
-  }
-
-  /**
    * Aggregate transaction totals by type for an account.
    */
   async getAccountTotals(accountId: string, tenantId: string) {
-    // Verify account belongs to tenant
     const account = await this.prisma.account.findFirst({
       where: { id: accountId, tenantId },
     });
@@ -182,17 +154,18 @@ export class TransactionRepository extends BaseRepository<Transaction> {
   }
 
   /**
-   * Batch create transactions within a journal entry (double-entry bookkeeping).
+   * Batch create transactions within a journal entry.
    */
   async createBatch(
     transactions: Array<{
       accountId: string;
       amount: number;
       type: TransactionType;
-      currency?: string;
+      currency?: Currency;
       description?: string;
       reference?: string;
       journalEntryId?: string;
+      postingDate?: Date;
     }>,
   ) {
     return this.prisma.$transaction(
@@ -202,10 +175,11 @@ export class TransactionRepository extends BaseRepository<Transaction> {
             accountId: tx.accountId,
             amount: new Prisma.Decimal(tx.amount),
             type: tx.type,
-            currency: tx.currency || 'USD',
+            currency: tx.currency || Currency.USD,
             description: tx.description,
             reference: tx.reference,
             journalEntryId: tx.journalEntryId,
+            postingDate: tx.postingDate || new Date(),
           },
         }),
       ),

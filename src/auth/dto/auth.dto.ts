@@ -77,6 +77,7 @@ export class AuthResponseDto {
   @ApiProperty({
     description: 'Authenticated user information',
     type: 'object',
+    additionalProperties: true,
   })
   user!: {
     id: string;

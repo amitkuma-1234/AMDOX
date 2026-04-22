@@ -145,4 +145,14 @@ export class UserRepository extends BaseRepository<User> {
       },
     };
   }
+
+  /**
+   * Update last login timestamp for a user.
+   */
+  async updateLastLogin(id: string): Promise<void> {
+    await this.prisma.user.update({
+      where: { id },
+      data: { lastLoginAt: new Date() },
+    });
+  }
 }

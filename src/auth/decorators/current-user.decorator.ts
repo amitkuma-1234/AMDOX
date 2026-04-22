@@ -1,16 +1,20 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
 /**
-<<<<<<< HEAD
  * Authenticated user payload extracted from JWT.
+ * This matches the object returned by JwtStrategy.validate().
  */
 export interface AuthenticatedUser {
-  id: string;
+  userId: string;
   email: string;
   tenantId: string;
-  keycloakId: string;
+  username: string;
+  firstName?: string;
+  lastName?: string;
   roles: string[];
   permissions: string[];
+  issuedAt: number;
+  expiresAt: number;
 }
 
 /**
@@ -18,31 +22,13 @@ export interface AuthenticatedUser {
  * Optionally accepts a property name to extract a specific field.
  *
  * @example
- * @Get('profile')
  * getProfile(@CurrentUser() user: AuthenticatedUser) { ... }
- *
- * @Get('my-id')
- * getMyId(@CurrentUser('id') userId: string) { ... }
+ * getMyId(@CurrentUser('userId') userId: string) { ... }
  */
 export const CurrentUser = createParamDecorator(
   (data: keyof AuthenticatedUser | undefined, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest();
-    const user = request.user as AuthenticatedUser;
-=======
- * @CurrentUser() — Extract the current authenticated user from the request.
- *
- * Usage:
- *   @Get('profile')
- *   getProfile(@CurrentUser() user: JwtPayload) { ... }
- *
- *   @Get('email')
- *   getEmail(@CurrentUser('email') email: string) { ... }
- */
-export const CurrentUser = createParamDecorator(
-  (data: string | undefined, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest();
     const user = request.user;
->>>>>>> 55b9cafb78f7dbadc4be17100cb27b4695dd171b
 
     if (!user) {
       return null;
