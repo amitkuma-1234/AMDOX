@@ -46,6 +46,9 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
       - name: Fix permissions
         run: |
           chmod +x node_modules/.bin/eslint
