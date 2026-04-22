@@ -53,6 +53,7 @@ jobs:
         run: |
           chmod +x node_modules/.bin/eslint
           chmod +x node_modules/.bin/prettier
+          chmod +x node_modules/.bin/prisma
         
       - name: Lint
         run: npm run lint
