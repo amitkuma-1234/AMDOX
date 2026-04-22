@@ -1,11 +1,7 @@
 {
-<<<<<<< HEAD
-  "singleQuote": true,
-  "trailingComma": "all"
-=======
   "$schema": "https://json.schemastore.org/prettierrc",
   "semi": true,
-  "singleQuote": false,
+  "singleQuote": true,
   "tabWidth": 2,
   "useTabs": false,
   "trailingComma": "all",
@@ -28,5 +24,4 @@
       }
     }
   ]
->>>>>>> ad4764060fe71460b97cd325cf64002388ffea0d
 }
