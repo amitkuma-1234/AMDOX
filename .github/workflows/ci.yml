@@ -50,7 +50,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm install
 
       - name: Lint
         run: pnpm lint
@@ -85,7 +85,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm install
 
       - name: Run unit tests
         run: pnpm test -- --coverage
@@ -145,7 +145,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm install
 
       - name: Generate Prisma client
         run: pnpm db:generate
@@ -223,10 +223,10 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm install
 
       - name: Build all packages
-        run: pnpm build
+        run: npm run build
 
   # ----------------------------------------------------------
   # Docker Build & Push
@@ -380,7 +380,7 @@ jobs:
       - name: Send Slack notification
         uses: slackapi/slack-github-action@v2.0.0
         with:
-          slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
 
           payload: |
