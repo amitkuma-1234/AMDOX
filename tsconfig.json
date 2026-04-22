@@ -51,7 +51,9 @@
     "isolatedModules": true,
     "skipLibCheck": true,
     "incremental": true,
-    "composite": false
+    "composite": false,
+    "baseUrl": "./",
+    "ignoreDeprecations": "5.0"
   },
   "exclude": [
     "node_modules",
