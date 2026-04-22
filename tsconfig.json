@@ -53,7 +53,7 @@
     "incremental": true,
     "composite": false,
     "baseUrl": "./",
-    "ignoreDeprecations": "5.0"
+    "ignoreDeprecations": "6.0"
   },
   "exclude": [
     "node_modules",
