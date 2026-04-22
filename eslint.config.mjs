@@ -37,7 +37,7 @@ export default tseslint.config(
       '@typescript-eslint/no-redundant-type-constituents': 'off',
       '@typescript-eslint/no-unsafe-enum-comparison': 'off',
       '@typescript-eslint/no-misused-promises': 'off',
-      "prettier/prettier": ["error", { endOfLine: "auto" }],
+      "prettier/prettier": ["error", { "endOfLine": "auto" }],
     },
   },
 );

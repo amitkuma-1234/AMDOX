@@ -47,7 +47,9 @@ jobs:
         run: npm install
 
       - name: Fix permissions
-        run: chmod +x node_modules/.bin/eslint
+        run: |
+           chmod +x node_modules/.bin/eslint
+           chmod +x node_modules/.bin/prettier
         
       - name: Lint
         run: npm run lint
