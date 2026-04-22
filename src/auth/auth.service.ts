@@ -53,6 +53,7 @@ export class AuthService {
       const keycloakTokens = await this.exchangeCredentials(loginDto.email, loginDto.password);
 
       // Decode Keycloak access token to get user info
+      // const keycloakPayload = this.jwtService.decode(keycloakTokens.access_token);
       const keycloakPayload = this.jwtService.decode(keycloakTokens.access_token);
 
       if (!keycloakPayload) {
