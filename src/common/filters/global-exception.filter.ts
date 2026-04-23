@@ -36,10 +36,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
     const response = ctx.getResponse<Response>();
 
-    const correlationId =
-      (request.headers['x-request-id'] as string) || uuidv4();
-    const isDevelopment =
-      this.configService.get<string>('NODE_ENV') === 'development';
+    const correlationId = (request.headers['x-request-id'] as string) || uuidv4();
+    const isDevelopment = this.configService.get<string>('NODE_ENV') === 'development';
 
     let status: number;
     let message: string;
@@ -70,9 +68,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       }
     } else if (exception instanceof Error) {
       status = HttpStatus.INTERNAL_SERVER_ERROR;
-      message = isDevelopment
-        ? exception.message
-        : 'An unexpected error occurred';
+      message = isDevelopment ? exception.message : 'An unexpected error occurred';
       error = 'Internal Server Error';
 
       // Log the full stack trace for server errors

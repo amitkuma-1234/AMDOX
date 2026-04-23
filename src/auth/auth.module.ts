@@ -23,7 +23,7 @@ import { DatabaseModule } from '../database/database.module';
         signOptions: {
           issuer: configService.get<string>('JWT_ISSUER'),
           audience: configService.get<string>('JWT_AUDIENCE', 'amdox-api'),
-          algorithm: 'HS256', // Used for app-generated tokens (refresh)
+          algorithm: 'HS256',
         },
       }),
     }),

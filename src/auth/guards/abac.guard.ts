@@ -22,10 +22,10 @@ export class AbacGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(
-      PERMISSIONS_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    const requiredPermissions = this.reflector.getAllAndOverride<string[]>(PERMISSIONS_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
     // If no permissions required, allow access
     if (!requiredPermissions || requiredPermissions.length === 0) {

@@ -46,10 +46,17 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Fix Prisma Permissions
+        run: chmod +x node_modules/.bin/prisma
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
       - name: Fix permissions
         run: |
           chmod +x node_modules/.bin/eslint
           chmod +x node_modules/.bin/prettier
+          chmod -R +x node_modules/.bin/prisma
         
       - name: Lint
         run: npm run lint

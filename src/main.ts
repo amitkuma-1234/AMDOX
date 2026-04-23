@@ -42,9 +42,9 @@ async function bootstrap() {
         imgSrc: ["'self'", 'data:', 'validator.swagger.io', 'https:'],
         scriptSrc: ["'self'", "'unsafe-inline'"],
       },
-    },
-    crossOriginEmbedderPolicy: false,
-  }));
+      crossOriginEmbedderPolicy: false,
+    }),
+  );
 
   // ── Compression ─────────────────────────────────────────────
   app.use(compression());

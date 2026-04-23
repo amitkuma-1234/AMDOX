@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  OnModuleInit,
-  OnModuleDestroy,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
 
@@ -12,10 +7,7 @@ import { ConfigService } from '@nestjs/config';
  * soft-delete middleware, query logging, and performance monitoring.
  */
 @Injectable()
-export class PrismaService
-  extends PrismaClient
-  implements OnModuleInit, OnModuleDestroy
-{
+export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(PrismaService.name);
 
   constructor(private readonly configService: ConfigService) {
@@ -35,9 +27,7 @@ export class PrismaService
     // ── Query & Lifecycle Logging ─────────────────────────────
     (this as any).$on('query', (event: any) => {
       if (event.duration > 500) {
-        this.logger.warn(
-          `⚠ Slow query (${event.duration}ms): ${event.query.substring(0, 200)}`,
-        );
+        this.logger.warn(`⚠ Slow query (${event.duration}ms): ${event.query.substring(0, 200)}`);
       } else if (configService.get('NODE_ENV') === 'development') {
         this.logger.debug(`Query (${event.duration}ms): ${event.query.substring(0, 150)}`);
       }

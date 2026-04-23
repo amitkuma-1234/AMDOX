@@ -58,7 +58,11 @@ export class AuthService {
   /**
    * Authenticate user via Keycloak and return local tokens.
    */
-  async login(loginDto: LoginDto, ipAddress?: string, userAgent?: string): Promise<AuthResponseDto> {
+  async login(
+    loginDto: LoginDto,
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<AuthResponseDto> {
     this.logger.log(`Login attempt for: ${loginDto.email}`);
 
     try {
@@ -69,6 +73,7 @@ export class AuthService {
       );
 
       const keycloakPayload = this.jwtService.decode(keycloakTokens.access_token) as any;
+
       if (!keycloakPayload) {
         throw new UnauthorizedException('Invalid credentials');
       }
@@ -136,11 +141,12 @@ export class AuthService {
           permissions,
         },
       };
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof UnauthorizedException || error instanceof BadRequestException) {
         throw error;
       }
-      this.logger.error(`Login failed for ${loginDto.email}: ${(error as Error).message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Login failed for ${loginDto.email}: ${errorMessage}`);
       throw new UnauthorizedException('Invalid credentials');
     }
   }

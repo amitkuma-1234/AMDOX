@@ -10,12 +10,7 @@ import {
   Headers,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
@@ -27,7 +22,7 @@ import { CurrentUser } from './decorators/current-user.decorator';
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
 
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   /**
    * POST /auth/login
@@ -47,10 +42,7 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   @ApiResponse({ status: 429, description: 'Too many login attempts' })
-  async login(
-    @Body() loginDto: LoginDto,
-    @Req() req: Request,
-  ): Promise<AuthResponseDto> {
+  async login(@Body() loginDto: LoginDto, @Req() req: Request): Promise<AuthResponseDto> {
     const ipAddress = req.ip || req.socket.remoteAddress;
     const userAgent = req.headers['user-agent'];
 
@@ -81,11 +73,7 @@ export class AuthController {
     const ipAddress = req.ip || req.socket.remoteAddress;
     const userAgent = req.headers['user-agent'];
 
-    return this.authService.refresh(
-      refreshDto.refreshToken,
-      ipAddress,
-      userAgent,
-    );
+    return this.authService.refresh(refreshDto.refreshToken, ipAddress, userAgent);
   }
 
   /**

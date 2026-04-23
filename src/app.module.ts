@@ -42,7 +42,7 @@ import { TenantContextMiddleware } from './auth/middleware/tenant-context.middle
           {
             name: 'auth',
             ttl: 60000, // 1 minute
-            limit: 10,  // 10 auth requests per minute
+            limit: 10, // 10 auth requests per minute
           },
         ],
       }),
