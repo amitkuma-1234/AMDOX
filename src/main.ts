@@ -42,9 +42,9 @@ async function bootstrap() {
         imgSrc: ["'self'", 'data:', 'validator.swagger.io', 'https:'],
         scriptSrc: ["'self'", "'unsafe-inline'"],
       },
-      crossOriginEmbedderPolicy: false,
-    }),
-  );
+    },
+    crossOriginEmbedderPolicy: false,
+  }));
 
   // ── Compression ─────────────────────────────────────────────
   app.use(compression());
@@ -100,7 +100,7 @@ async function bootstrap() {
       'Tenant context is extracted from the JWT `tenant_id` claim.\n' +
       'All data is isolated per tenant via row-level security.',
     )
-    .setVersion('1.0.0')
+    .setVersion(configService.get('APP_VERSION', '1.1.0'))
     .addBearerAuth(
       {
         type: 'http',
