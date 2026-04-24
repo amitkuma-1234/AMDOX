@@ -5,7 +5,7 @@ import { RequireRole } from '@auth/decorators/require-role.decorator';
 import { HrService } from '@hr/services/hr.service';
 import { CreateEmployeeDto } from '@hr/dto/hr.dto';
 
-@ApiTags('HR - Employee Management')
+@ApiTags('Employees')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('hr/employees')

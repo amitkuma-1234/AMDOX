@@ -5,7 +5,7 @@ import { RequireRole } from '@auth/decorators/require-role.decorator';
 import { SupplyChainService } from '@scm/services/supply-chain.service';
 import { CreatePurchaseOrderDto, CreateGoodsReceiptDto } from '@scm/dto/scm.dto';
 
-@ApiTags('SCM - Procurement')
+@ApiTags('Purchase Orders')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('scm/procurement')

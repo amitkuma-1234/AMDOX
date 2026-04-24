@@ -5,7 +5,7 @@ import { RequireRole } from '@auth/decorators/require-role.decorator';
 import { InventoryService } from '@scm/services/inventory.service';
 import { CreateInventoryItemDto } from '@scm/dto/scm.dto';
 
-@ApiTags('SCM - Inventory Management')
+@ApiTags('Inventory')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('scm/inventory')

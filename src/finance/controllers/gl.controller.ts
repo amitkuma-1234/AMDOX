@@ -6,7 +6,7 @@ import { GLService } from '@finance/services/gl.service';
 import { CreateAccountDto, CreateJournalEntryDto } from '@finance/dto/gl.dto';
 import { Currency } from '@prisma/client';
 
-@ApiTags('Finance - General Ledger')
+@ApiTags('Accounts')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('finance/gl')
