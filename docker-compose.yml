@@ -143,6 +143,35 @@ services:
     networks:
       - amdox-network
 
+  # ── AMDOX ERP API (Phase 2) ───────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP: api
+    container_name: amdox-api
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://${DB_USER:-amdox}:${DB_PASSWORD:-amdox_secret}@postgres:5432/${DB_NAME:-amdox}?schema=public
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-amdox_redis_secret}
+      - KEYCLOAK_BASE_URL=http://keycloak:8080
+      - ELASTICSEARCH_NODE=http://elasticsearch:9200
+    ports:
+      - "${API_PORT:-4000}:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    networks:
+      - amdox-network
+
 volumes:
   postgres_data:
     driver: local

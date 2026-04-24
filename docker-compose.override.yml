@@ -63,3 +63,14 @@ services:
     ports:
       - '9200:9200'
       - '9300:9300'
+
+  # API dev overrides
+  api:
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run start:dev
+    ports:
+      - '4000:4000'
