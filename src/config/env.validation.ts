@@ -13,7 +13,7 @@ export const envValidationSchema = Joi.object({
   PORT: Joi.number().port().default(3000),
   API_PREFIX: Joi.string().default('api'),
   APP_NAME: Joi.string().default('AMDOX ERP Platform'),
-  APP_VERSION: Joi.string().default('1.0.0'),
+  APP_VERSION: Joi.string().default('1.1.0'),
   CORS_ORIGINS: Joi.string().default('http://localhost:4200,http://localhost:3000'),
 
   // ── Database ─────────────────────────────────────────────
