@@ -11,6 +11,10 @@ import { FinanceModule } from './finance/finance.module';
 import { ApArModule } from './ap-ar/ap-ar.module';
 import { HrModule } from './hr/hr.module';
 import { ScmModule } from './scm/scm.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { ProjectModule } from './project/project.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { SecurityModule } from './security/security.module';
 import { TenantContextMiddleware } from './auth/middleware/tenant-context.middleware';
 
 @Module({
@@ -77,6 +81,10 @@ import { TenantContextMiddleware } from './auth/middleware/tenant-context.middle
     ApArModule,
     HrModule,
     ScmModule,
+    DashboardModule,
+    ProjectModule,
+    NotificationsModule,
+    SecurityModule,
   ],
   providers: [
     // Global rate limiting guard

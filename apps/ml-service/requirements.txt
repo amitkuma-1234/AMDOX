@@ -1,10 +1,34 @@
 # AMDOX ML Service — Pinned Dependencies
-# Generated from pyproject.toml
+# Demand Forecasting: Prophet + LSTM (PyTorch)
+
+# ── Core Framework ──────────────────────────────────────────
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
 pydantic==2.10.4
 pydantic-settings==2.7.1
 httpx==0.28.1
 python-multipart==0.0.20
+
+# ── Data Science ────────────────────────────────────────────
 numpy==2.2.1
+pandas==2.2.3
 scikit-learn==1.6.1
+
+# ── Forecasting Models ──────────────────────────────────────
+prophet==1.1.6
+torch==2.5.1
+torchvision==0.20.1
+
+# ── ML Ops ──────────────────────────────────────────────────
+mlflow==2.19.0
+
+# ── Database & Caching ──────────────────────────────────────
+psycopg2-binary==2.9.10
+redis==5.2.1
+sqlalchemy==2.0.36
+
+# ── Utilities ───────────────────────────────────────────────
+structlog==24.4.0
+python-json-logger==3.2.1
+holidays==0.63
+joblib==1.4.2

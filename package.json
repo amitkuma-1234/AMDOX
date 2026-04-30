@@ -61,7 +61,14 @@
         "passport-jwt": "^4.0.1",
         "reflect-metadata": "^0.2.2",
         "rxjs": "^7.8.1",
-        "uuid": "^14.0.0"
+        "uuid": "^14.0.0",
+        "@nestjs/event-emitter": "^3.0.0",
+        "@bull-board/api": "^6.0.0",
+        "@bull-board/express": "^6.0.0",
+        "mustache": "^4.2.0",
+        "exceljs": "^4.4.0",
+        "dompurify": "^3.2.0",
+        "jsdom": "^25.0.0"
     },
     "devDependencies": {
         "@commitlint/config-conventional": "^20.5.0",
@@ -120,7 +127,11 @@
             "^@finance/(.*)$": "<rootDir>/finance/$1",
             "^@hr/(.*)$": "<rootDir>/hr/$1",
             "^@scm/(.*)$": "<rootDir>/scm/$1",
-            "^@ap-ar/(.*)$": "<rootDir>/ap-ar/$1"
+            "^@ap-ar/(.*)$": "<rootDir>/ap-ar/$1",
+            "^@dashboard/(.*)$": "<rootDir>/dashboard/$1",
+            "^@project/(.*)$": "<rootDir>/project/$1",
+            "^@notifications/(.*)$": "<rootDir>/notifications/$1",
+            "^@security/(.*)$": "<rootDir>/security/$1"
         }
     }
 }

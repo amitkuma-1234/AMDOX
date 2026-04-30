@@ -61,4 +61,21 @@ export const envValidationSchema = Joi.object({
   OTEL_ENABLED: Joi.boolean().default(false),
   OTEL_SERVICE_NAME: Joi.string().default('amdox-api'),
   OTEL_EXPORTER_OTLP_ENDPOINT: Joi.string().uri().optional(),
+
+  // ── Phase 3: ML Service ──────────────────────────────────
+  ML_SERVICE_URL: Joi.string().uri().default('http://localhost:8000'),
+  MLFLOW_TRACKING_URI: Joi.string().uri().default('http://localhost:5000'),
+
+  // ── Phase 3: Encryption ──────────────────────────────────
+  ENCRYPTION_KEY: Joi.string().min(32).default('amdox-default-key-change-in-prod!!'),
+
+  // ── Phase 3: Webhook ─────────────────────────────────────
+  WEBHOOK_SECRET: Joi.string().default('amdox-webhook-secret'),
+
+  // ── Phase 3: SMTP / Email ────────────────────────────────
+  SMTP_HOST: Joi.string().default('smtp.mailtrap.io'),
+  SMTP_PORT: Joi.number().port().default(587),
+  SMTP_USER: Joi.string().allow('').default(''),
+  SMTP_PASSWORD: Joi.string().allow('').default(''),
+  SMTP_FROM: Joi.string().email().default('noreply@amdox.com'),
 }).options({ allowUnknown: true });

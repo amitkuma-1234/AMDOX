@@ -179,6 +179,61 @@ services:
     networks:
       - amdox-network
 
+  # ── MLflow Tracking Server (Phase 3) ─────────────────────
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.19.0
+    container_name: amdox-mlflow
+    restart: unless-stopped
+    ports:
+      - "${MLFLOW_PORT:-5000}:5000"
+    environment:
+      - MLFLOW_BACKEND_STORE_URI=sqlite:///mlflow/mlflow.db
+      - MLFLOW_DEFAULT_ARTIFACT_ROOT=/mlflow/artifacts
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:///mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+    volumes:
+      - mlflow_data:/mlflow
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - amdox-network
+
+  # ── AMDOX ML Service (Phase 3) ──────────────────────────
+  ml-service:
+    build:
+      context: ./apps/ml-service
+      dockerfile: Dockerfile
+    container_name: amdox-ml-service
+    restart: unless-stopped
+    environment:
+      - ML_DATABASE_URL=postgresql://${DB_USER:-amdox}:${DB_PASSWORD:-amdox_secret}@postgres:5432/${DB_NAME:-amdox}?schema=public
+      - ML_REDIS_URL=redis://:${REDIS_PASSWORD:-amdox_redis_secret}@redis:6379/0
+      - ML_MLFLOW_TRACKING_URI=http://mlflow:5000
+      - ML_ENVIRONMENT=production
+    ports:
+      - "${ML_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    networks:
+      - amdox-network
+
 volumes:
   postgres_data:
     driver: local
@@ -188,9 +243,12 @@ volumes:
     driver: local
   es_data:
     driver: local
+  mlflow_data:
+    driver: local
 
 networks:
   amdox-network:
     driver: bridge
     name: amdox-network
+
 

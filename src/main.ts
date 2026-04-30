@@ -7,6 +7,8 @@ import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { SecurityExceptionFilter } from './security/filters/security-exception.filter';
+import { AuditLogInterceptor } from './security/interceptors/audit-log.interceptor';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 
@@ -33,18 +35,36 @@ async function bootstrap() {
     defaultVersion: '1',
   });
 
-  // ── Security ────────────────────────────────────────────────
+  // ── Security headers (OWASP / SOC 2) ───────────────────────
   app.use(helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", 'data:', 'validator.swagger.io', 'https:'],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'"],           // No unsafe-inline
+        scriptSrc: ["'self'"],          // No unsafe-inline
+        imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'"],
+        objectSrc: ["'none'"],
+        frameSrc: ["'none'"],
+        upgradeInsecureRequests: [],
       },
     },
+    hsts: {
+      maxAge: 63072000,       // 2 years
+      includeSubDomains: true,
+      preload: true,
+    },
     crossOriginEmbedderPolicy: false,
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    permittedCrossDomainPolicies: { permittedPolicies: 'none' },
   }));
+
+  // X-Request-ID tracking
+  app.use((req: any, _res: any, next: any) => {
+    req.id = req.headers['x-request-id'] ?? require('crypto').randomUUID();
+    next();
+  });
 
   // ── Compression ─────────────────────────────────────────────
   app.use(compression());
@@ -79,12 +99,16 @@ async function bootstrap() {
     }),
   );
 
-  // ── Global Filters ──────────────────────────────────────────
-  app.useGlobalFilters(new GlobalExceptionFilter(configService));
+  // ── Global Filters (security first) ────────────────────────
+  app.useGlobalFilters(
+    new GlobalExceptionFilter(configService),
+    new SecurityExceptionFilter(),
+  );
 
   // ── Global Interceptors ─────────────────────────────────────
   app.useGlobalInterceptors(
     new LoggingInterceptor(),
+    new AuditLogInterceptor(),  // Phase 3: audit log all mutations
     new TransformInterceptor(),
   );
 
@@ -132,6 +156,13 @@ async function bootstrap() {
     .addTag('Purchase Orders', 'Procurement management')
     .addTag('Inventory', 'Inventory & stock management')
     .addTag('Notifications', 'Notification management')
+    .addTag('Dashboard Widgets', 'BI dashboard widget management')
+    .addTag('Reports', 'Scheduled report management')
+    .addTag('Metrics', 'Real-time business metrics')
+    .addTag('Projects', 'Project management')
+    .addTag('Project Tasks', 'Task & dependency management')
+    .addTag('Project Resources', 'Resource allocation & utilisation')
+    .addTag('Admin', 'Administration & queue management')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
@@ -164,12 +195,14 @@ async function bootstrap() {
 
   // ── Start Server ────────────────────────────────────────────
   await app.listen(port);
-  logger.log(`─────────────────────────────────────────────────`);
-  logger.log(`🚀 AMDOX ERP API is running on: http://localhost:${port}`);
-  logger.log(`📚 Swagger docs available at: http://localhost:${port}/api-docs`);
-  logger.log(`❤️  Health check at: http://localhost:${port}/health/live`);
-  logger.log(`🔧 Environment: ${configService.get<string>('NODE_ENV', 'development')}`);
-  logger.log(`─────────────────────────────────────────────────`);
+  logger.log(`─────────────────────────────────────────────────────────────`);
+  logger.log(`🚀 AMDOX ERP API  →  http://localhost:${port}`);
+  logger.log(`📚 Swagger Docs   →  http://localhost:${port}/api-docs`);
+  logger.log(`❤️  Health        →  http://localhost:${port}/health/live`);
+  logger.log(`📊 Bull Board     →  http://localhost:${port}/api/v1/admin/jobs`);
+  logger.log(`🔧 Environment    →  ${configService.get<string>('NODE_ENV', 'development')}`);
+  logger.log(`🔒 HSTS / CSP     →  enabled`);
+  logger.log(`─────────────────────────────────────────────────────────────`);
 }
 
 bootstrap().catch((error) => {

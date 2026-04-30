@@ -228,6 +228,7 @@ model Tenant {
   arInvoices     ArInvoice[]
   goodsReceipts  GoodsReceipt[]
   payrolls       Payroll[]
+  projects       Project[]
 
   @@index([slug])
   @@index([status])
@@ -783,4 +784,287 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([timestamp])
   @@map("audit_logs")
+}
+
+// ─────────────────────────────────────────────────────────────
+// PHASE 3: Project Management Enums
+// ─────────────────────────────────────────────────────────────
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  CLOSED
+  CANCELLED
+}
+
+enum TaskStatus {
+  OPEN
+  IN_PROGRESS
+  BLOCKED
+  REVIEW
+  CLOSED
+}
+
+enum MilestoneStatus {
+  PENDING
+  ACHIEVED
+  MISSED
+  CANCELLED
+}
+
+enum WidgetType {
+  BAR_CHART
+  LINE_CHART
+  PIE_CHART
+  HEATMAP
+  TABLE
+  KPI_CARD
+  FUNNEL
+}
+
+enum ReportFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+}
+
+enum NotificationFrequency {
+  IMMEDIATE
+  DAILY_DIGEST
+  WEEKLY_DIGEST
+}
+
+enum WebhookStatus {
+  ACTIVE
+  INACTIVE
+  FAILED
+}
+
+// ─────────────────────────────────────────────────────────────
+// PHASE 3: Project Management Models
+// ─────────────────────────────────────────────────────────────
+
+model Project {
+  id             String        @id @default(uuid()) @db.Uuid
+  name           String        @db.VarChar(255)
+  description    String?       @db.Text
+  status         ProjectStatus @default(PLANNING)
+  startDate      DateTime      @map("start_date") @db.Date
+  endDate        DateTime?     @map("end_date") @db.Date
+  budget         Decimal?      @db.Decimal(20, 4)
+  actualSpend    Decimal       @default(0) @map("actual_spend") @db.Decimal(20, 4)
+  currency       Currency      @default(USD)
+  projectManager String?       @map("project_manager") @db.Uuid
+  settings       Json?         @default("{}")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+  deletedAt      DateTime?     @map("deleted_at")
+
+  tenantId String @map("tenant_id") @db.Uuid
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  tasks              ProjectTask[]
+  milestones         Milestone[]
+  resourceAllocations ResourceAllocation[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([deletedAt])
+  @@map("projects")
+}
+
+model ProjectTask {
+  id             String     @id @default(uuid()) @db.Uuid
+  title          String     @db.VarChar(255)
+  description    String?    @db.Text
+  status         TaskStatus @default(OPEN)
+  startDate      DateTime?  @map("start_date") @db.Date
+  endDate        DateTime?  @map("end_date") @db.Date
+  estimatedHours Decimal?   @map("estimated_hours") @db.Decimal(10, 2)
+  actualHours    Decimal    @default(0) @map("actual_hours") @db.Decimal(10, 2)
+  priority       Int        @default(0)
+  sortOrder      Int        @default(0) @map("sort_order")
+  assignedTo     String?    @map("assigned_to") @db.Uuid
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @updatedAt @map("updated_at")
+
+  projectId    String       @map("project_id") @db.Uuid
+  project      Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parentTaskId String?      @map("parent_task_id") @db.Uuid
+  parentTask   ProjectTask? @relation("TaskHierarchy", fields: [parentTaskId], references: [id])
+  subtasks     ProjectTask[] @relation("TaskHierarchy")
+
+  dependenciesAsPredecessor TaskDependency[] @relation("PredecessorDeps")
+  dependenciesAsSuccessor   TaskDependency[] @relation("SuccessorDeps")
+  resourceAllocations       ResourceAllocation[]
+
+  @@index([projectId])
+  @@index([parentTaskId])
+  @@index([status])
+  @@index([assignedTo])
+  @@map("project_tasks")
+}
+
+model TaskDependency {
+  id              String @id @default(uuid()) @db.Uuid
+  predecessorId   String @map("predecessor_id") @db.Uuid
+  successorId     String @map("successor_id") @db.Uuid
+  dependencyType  String @default("finish_to_start") @map("dependency_type") @db.VarChar(30)
+  lagDays         Int    @default(0) @map("lag_days")
+
+  predecessor ProjectTask @relation("PredecessorDeps", fields: [predecessorId], references: [id], onDelete: Cascade)
+  successor   ProjectTask @relation("SuccessorDeps", fields: [successorId], references: [id], onDelete: Cascade)
+
+  @@unique([predecessorId, successorId])
+  @@index([predecessorId])
+  @@index([successorId])
+  @@map("task_dependencies")
+}
+
+model Milestone {
+  id        String          @id @default(uuid()) @db.Uuid
+  name      String          @db.VarChar(255)
+  dueDate   DateTime        @map("due_date") @db.Date
+  status    MilestoneStatus @default(PENDING)
+  notes     String?         @db.Text
+  createdAt DateTime        @default(now()) @map("created_at")
+
+  projectId String  @map("project_id") @db.Uuid
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([dueDate])
+  @@map("milestones")
+}
+
+model ResourceAllocation {
+  id           String   @id @default(uuid()) @db.Uuid
+  allocation   Decimal  @db.Decimal(5, 2)  // percentage, e.g. 50.00%
+  startDate    DateTime @map("start_date") @db.Date
+  endDate      DateTime @map("end_date") @db.Date
+  employeeId   String   @map("employee_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  taskId    String      @map("task_id") @db.Uuid
+  task      ProjectTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  projectId String      @map("project_id") @db.Uuid
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@index([projectId])
+  @@index([employeeId])
+  @@map("resource_allocations")
+}
+
+// ─────────────────────────────────────────────────────────────
+// PHASE 3: BI Dashboard Models
+// ─────────────────────────────────────────────────────────────
+
+model DashboardWidget {
+  id              String     @id @default(uuid()) @db.Uuid
+  title           String     @db.VarChar(255)
+  type            WidgetType
+  query           String     @db.Text
+  config          Json       @default("{}")   // { chart options, colors, etc }
+  position        Json       @default("{}")   // { x, y, w, h for grid }
+  refreshInterval Int        @default(300) @map("refresh_interval")  // seconds
+  isActive        Boolean    @default(true) @map("is_active")
+  createdAt       DateTime   @default(now()) @map("created_at")
+  updatedAt       DateTime   @updatedAt @map("updated_at")
+  deletedAt       DateTime?  @map("deleted_at")
+
+  tenantId  String @map("tenant_id") @db.Uuid
+  createdBy String @map("created_by") @db.Uuid
+
+  @@index([tenantId])
+  @@index([createdBy])
+  @@index([deletedAt])
+  @@map("dashboard_widgets")
+}
+
+model ScheduledReport {
+  id          String          @id @default(uuid()) @db.Uuid
+  name        String          @db.VarChar(255)
+  template    Json            @default("{}")
+  cronExpr    String          @map("cron_expr") @db.VarChar(100)
+  frequency   ReportFrequency @default(WEEKLY)
+  recipients  String[]        // email addresses
+  lastRunAt   DateTime?       @map("last_run_at")
+  nextRunAt   DateTime?       @map("next_run_at")
+  isActive    Boolean         @default(true) @map("is_active")
+  retryCount  Int             @default(0) @map("retry_count")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  tenantId  String @map("tenant_id") @db.Uuid
+  createdBy String @map("created_by") @db.Uuid
+
+  @@index([tenantId])
+  @@index([isActive])
+  @@map("scheduled_reports")
+}
+
+// ─────────────────────────────────────────────────────────────
+// PHASE 3: Notification & Event Engine Models
+// ─────────────────────────────────────────────────────────────
+
+model NotificationPreference {
+  id        String                @id @default(uuid()) @db.Uuid
+  eventType String                @map("event_type") @db.VarChar(100)
+  channels  NotificationChannel[]
+  frequency NotificationFrequency @default(IMMEDIATE)
+  quietStart String?              @map("quiet_start") @db.VarChar(5)  // "21:00"
+  quietEnd   String?              @map("quiet_end") @db.VarChar(5)    // "07:00"
+  isEnabled  Boolean              @default(true) @map("is_enabled")
+  createdAt  DateTime             @default(now()) @map("created_at")
+  updatedAt  DateTime             @updatedAt @map("updated_at")
+
+  userId String @map("user_id") @db.Uuid
+
+  @@unique([userId, eventType])
+  @@index([userId])
+  @@index([eventType])
+  @@map("notification_preferences")
+}
+
+model OutboxEvent {
+  id            String   @id @default(uuid()) @db.Uuid
+  eventType     String   @map("event_type") @db.VarChar(100)
+  aggregateId   String   @map("aggregate_id") @db.VarChar(255)
+  aggregateType String   @map("aggregate_type") @db.VarChar(100)
+  payload       Json
+  processed     Boolean  @default(false)
+  processedAt   DateTime? @map("processed_at")
+  retryCount    Int      @default(0) @map("retry_count")
+  lastError     String?  @map("last_error") @db.Text
+  timestamp     DateTime @default(now())
+
+  tenantId String @map("tenant_id") @db.Uuid
+
+  @@index([processed])
+  @@index([eventType])
+  @@index([timestamp])
+  @@index([tenantId])
+  @@map("outbox_events")
+}
+
+model WebhookEndpoint {
+  id          String        @id @default(uuid()) @db.Uuid
+  url         String        @db.VarChar(500)
+  secret      String        @db.VarChar(255)  // HMAC-SHA256 signing secret
+  eventTypes  String[]      @map("event_types")
+  status      WebhookStatus @default(ACTIVE)
+  description String?       @db.Text
+  lastCalledAt DateTime?    @map("last_called_at")
+  failureCount Int          @default(0) @map("failure_count")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  tenantId String @map("tenant_id") @db.Uuid
+
+  @@index([tenantId])
+  @@index([status])
+  @@map("webhook_endpoints")
 }

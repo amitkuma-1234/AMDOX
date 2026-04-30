@@ -4,12 +4,6 @@
 # Build:  docker build -t amdox-ml-service .
 # Run:    docker run -p 8000:8000 amdox-ml-service
 # ============================================================
-# Stage 1: Build (python:3.13-slim — pip install, compile)
-# Stage 2: Runtime (python:3.13-slim — copy venv, gunicorn)
-# ============================================================
-# Note: True distroless for Python 3.13 is not yet available.
-# Using python:3.13-slim with non-root user as secure alternative.
-# ============================================================
 
 # ── Stage 1: Build ─────────────────────────────────────────
 FROM python:3.13-slim AS builder
@@ -21,7 +15,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /build
 
-# Install build dependencies (gcc for compiled packages)
+# Install build dependencies (gcc for compiled packages like Prophet/PyTorch)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends gcc g++ && \
     rm -rf /var/lib/apt/lists/*
@@ -52,8 +46,6 @@ LABEL org.opencontainers.image.description="AMDOX AI/ML Service — FastAPI, sci
 LABEL org.opencontainers.image.vendor="AMDOX"
 LABEL org.opencontainers.image.source="https://github.com/amdox/amdox-erp"
 LABEL io.amdox.service="ml-service"
-LABEL io.amdox.resources.memory="4Gi"
-LABEL io.amdox.resources.cpu="2000m"
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -62,15 +54,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 # Create non-root user — security hardening
-# Benefits:
-#   - Process cannot modify system files even if exploited
-#   - Cannot install packages or modify runtime environment
-#   - Limits blast radius of container compromise
-#   - Required for K8s PodSecurityStandards (restricted)
 RUN groupadd --gid 1001 appgroup && \
-    useradd --uid 1001 --gid appgroup --shell /sbin/nologin --create-home appuser && \
-    mkdir -p /tmp/ml-models && \
-    chown -R appuser:appgroup /tmp/ml-models
+    useradd --uid 1001 --gid appgroup --shell /sbin/nologin --create-home appuser
 
 # Copy virtual environment from builder (contains all deps)
 COPY --from=builder /opt/venv /opt/venv
@@ -79,21 +64,19 @@ COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /build/app ./app
 COPY --from=builder /build/__pycache__ ./__pycache__ 2>/dev/null || true
 
-# Set ownership
-RUN chown -R appuser:appgroup /app
+# Create directories for model artifacts and logs
+RUN mkdir -p /app/artifacts /app/logs && \
+    chown -R appuser:appgroup /app
 
-# Switch to non-root
 USER appuser
 
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 \
+# Health check (using urllib to avoid extra dependencies)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
 # Production: gunicorn with uvicorn workers
-# - workers: 2 * CPU + 1 (adjust via env var GUNICORN_WORKERS)
-# - graceful timeout: 30s for long-running ML inference
 CMD ["gunicorn", "app.main:app", \
      "--worker-class", "uvicorn.workers.UvicornWorker", \
      "--bind", "0.0.0.0:8000", \
