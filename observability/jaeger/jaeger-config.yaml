@@ -1,0 +1,64 @@
+# ============================================================
+# Jaeger Configuration — Distributed Tracing
+# ============================================================
+# Trace exploration: search by traceId, serviceName, duration
+# Critical path analysis: identify slow spans
+# Error tracking: exception details in trace context
+# ============================================================
+
+# Collector configuration
+collector:
+  # OTLP receiver (from OTEL Collector)
+  otlp:
+    enabled: true
+    grpc:
+      host-port: ":4317"
+    http:
+      host-port: ":4318"
+
+# Storage backend
+storage:
+  type: badger  # Local dev. Use elasticsearch/cassandra in prod.
+  badger:
+    ephemeral: false
+    directory-key: /badger/key
+    directory-value: /badger/data
+    span-store-ttl: 720h  # 30 days
+
+  # Production: use Elasticsearch
+  # type: elasticsearch
+  # elasticsearch:
+  #   server-urls: http://elasticsearch:9200
+  #   index-prefix: jaeger
+  #   num-shards: 3
+  #   num-replicas: 1
+
+# Query service
+query:
+  base-path: /
+  static-files: ""
+
+# Sampling strategy
+sampling:
+  strategies-file: ""
+  # Default: probabilistic 10% for non-errors
+  # Errors are sampled at 100% via OTEL Collector tail sampling
+
+# UI configuration
+ui:
+  config:
+    archiveEnabled: false
+    dependencies:
+      menuEnabled: true
+    menu:
+      - label: "AMDOX Docs"
+        url: "https://docs.amdox.io"
+      - label: "Grafana"
+        url: "http://grafana:3000"
+
+# Metrics
+metrics:
+  backend: prometheus
+
+# Logging
+log-level: info

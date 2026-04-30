@@ -1,0 +1,20 @@
+{{- if .Values.mlService.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "amdox.fullname" . }}-ml-service
+  namespace: {{ include "amdox.namespace" . }}
+  labels:
+    {{- include "amdox.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ml-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.mlService.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "amdox.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: ml-service
+{{- end }}

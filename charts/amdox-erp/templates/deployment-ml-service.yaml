@@ -1,0 +1,91 @@
+{{- if .Values.mlService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "amdox.fullname" . }}-ml-service
+  namespace: {{ include "amdox.namespace" . }}
+  labels:
+    {{- include "amdox.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ml-service
+spec:
+  replicas: {{ .Values.mlService.replicas }}
+  selector:
+    matchLabels:
+      {{- include "amdox.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ml-service
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        {{- include "amdox.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ml-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: {{ include "amdox.serviceAccountName" . }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: ml-service
+          image: {{ include "amdox.image" (dict "global" .Values.global "image" .Values.mlService.image) }}
+          imagePullPolicy: {{ .Values.mlService.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.mlService.port }}
+              protocol: TCP
+          env:
+            {{- range $key, $value := .Values.mlService.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            - name: API_BASE_URL
+              value: "http://{{ include "amdox.fullname" . }}-api:{{ .Values.api.port }}"
+          {{- with .Values.mlService.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.mlService.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.mlService.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: model-cache
+              mountPath: /tmp/ml-models
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: model-cache
+          emptyDir:
+            sizeLimit: 2Gi
+      {{- with .Values.mlService.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.mlService.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

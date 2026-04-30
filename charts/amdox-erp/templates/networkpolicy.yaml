@@ -1,0 +1,195 @@
+{{- if .Values.networkPolicy.enabled }}
+# ============================================================
+# Network Policies — Deny-all default + explicit allow
+# ============================================================
+# Security: Zero-trust networking. Only explicitly allowed
+# traffic can reach pods. All other traffic is denied.
+# ============================================================
+
+# ── Default Deny All Ingress ──────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "amdox.fullname" . }}-default-deny
+  namespace: {{ include "amdox.namespace" . }}
+  labels:
+    {{- include "amdox.labels" . | nindent 4 }}
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+
+---
+# ── API: Allow ingress from ingress controller + web ──────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "amdox.fullname" . }}-api-ingress
+  namespace: {{ include "amdox.namespace" . }}
+  labels:
+    {{- include "amdox.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: api
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Allow from ingress controller
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: {{ .Values.api.port }}
+    # Allow from web pods
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: web
+      ports:
+        - protocol: TCP
+          port: {{ .Values.api.port }}
+    # Allow from ml-service pods
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: ml-service
+      ports:
+        - protocol: TCP
+          port: {{ .Values.api.port }}
+    # Allow Prometheus scraping
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: {{ .Values.api.port }}
+  egress:
+    # Allow DNS
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow to PostgreSQL
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 5432
+    # Allow to Redis
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 6379
+    # Allow to Elasticsearch
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 9200
+    # Allow to Keycloak
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 8443
+    # Allow to OTEL Collector
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 4318
+
+---
+# ── Web: Allow ingress from ingress controller ────────────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "amdox.fullname" . }}-web-ingress
+  namespace: {{ include "amdox.namespace" . }}
+  labels:
+    {{- include "amdox.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: web
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: {{ .Values.web.port }}
+  egress:
+    # Allow DNS
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow to API
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: api
+      ports:
+        - protocol: TCP
+          port: {{ .Values.api.port }}
+
+---
+# ── ML Service: Allow ingress from API ────────────────────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "amdox.fullname" . }}-ml-ingress
+  namespace: {{ include "amdox.namespace" . }}
+  labels:
+    {{- include "amdox.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/component: ml-service
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: api
+      ports:
+        - protocol: TCP
+          port: {{ .Values.mlService.port }}
+    # Allow Prometheus
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: {{ .Values.mlService.port }}
+  egress:
+    # Allow DNS
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Allow to API
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/component: api
+      ports:
+        - protocol: TCP
+          port: {{ .Values.api.port }}
+{{- end }}

@@ -1,0 +1,28 @@
+apiVersion: v2
+name: amdox-erp
+description: AMDOX ERP Platform — Multi-tenant Enterprise Resource Planning
+type: application
+version: 0.1.0
+appVersion: "1.1.0"
+home: https://github.com/amdox/amdox-erp
+sources:
+  - https://github.com/amdox/amdox-erp
+maintainers:
+  - name: AMDOX Team
+    email: devops@amdox.io
+keywords:
+  - erp
+  - enterprise
+  - nestjs
+  - nextjs
+  - kubernetes
+icon: https://amdox.io/logo.png
+dependencies:
+  - name: postgresql
+    version: "~16.0"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled
+  - name: redis
+    version: "~20.0"
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled

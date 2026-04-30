@@ -1,0 +1,59 @@
+# ============================================================
+# AMDOX Istio ServiceEntry — External Services
+# ============================================================
+# Allow mesh traffic to external APIs
+# ============================================================
+
+# Keycloak (if external)
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: keycloak-external
+  namespace: amdox-production
+spec:
+  hosts:
+    - keycloak.amdox.io
+  ports:
+    - number: 443
+      name: https
+      protocol: TLS
+  location: MESH_EXTERNAL
+  resolution: DNS
+
+---
+# AWS Services (S3, SES, etc.)
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: aws-services
+  namespace: amdox-production
+spec:
+  hosts:
+    - "*.amazonaws.com"
+    - "*.s3.amazonaws.com"
+  ports:
+    - number: 443
+      name: https
+      protocol: TLS
+  location: MESH_EXTERNAL
+  resolution: DNS
+
+---
+# OTEL Collector (if external)
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: otel-collector
+  namespace: amdox-production
+spec:
+  hosts:
+    - otel-collector.amdox-monitoring.svc.cluster.local
+  ports:
+    - number: 4318
+      name: otlp-http
+      protocol: HTTP
+    - number: 4317
+      name: otlp-grpc
+      protocol: GRPC
+  location: MESH_INTERNAL
+  resolution: DNS

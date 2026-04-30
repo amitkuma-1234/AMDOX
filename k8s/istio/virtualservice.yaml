@@ -1,0 +1,64 @@
+# ============================================================
+# AMDOX Istio VirtualService — Canary Traffic Split
+# ============================================================
+# Enables gradual rollout: 90% stable, 10% canary
+# Adjust weights during deployment, then promote canary to stable.
+# ============================================================
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: amdox-api
+  namespace: amdox-production
+  labels:
+    app.kubernetes.io/part-of: amdox-erp
+spec:
+  hosts:
+    - api.amdox.io
+  gateways:
+    - amdox-gateway
+  http:
+    - match:
+        - uri:
+            prefix: /api/
+      route:
+        - destination:
+            host: amdox-api-stable
+            port:
+              number: 4000
+          weight: 90
+        - destination:
+            host: amdox-api-canary
+            port:
+              number: 4000
+          weight: 10
+      timeout: 30s
+      retries:
+        attempts: 3
+        perTryTimeout: 10s
+        retryOn: 5xx,connect-failure,refused-stream
+    - match:
+        - uri:
+            prefix: /health
+      route:
+        - destination:
+            host: amdox-api-stable
+            port:
+              number: 4000
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: amdox-web
+  namespace: amdox-production
+spec:
+  hosts:
+    - app.amdox.io
+  gateways:
+    - amdox-gateway
+  http:
+    - route:
+        - destination:
+            host: amdox-web
+            port:
+              number: 3000
+      timeout: 15s

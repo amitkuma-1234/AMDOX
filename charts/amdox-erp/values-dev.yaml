@@ -1,0 +1,70 @@
+# ============================================================
+# AMDOX ERP — Development Environment Values
+# ============================================================
+# Usage: helm install amdox charts/amdox-erp -f charts/amdox-erp/values-dev.yaml
+# ============================================================
+
+namespace: amdox-dev
+
+api:
+  replicas: 1
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+  env:
+    NODE_ENV: development
+    LOG_LEVEL: "debug"
+
+web:
+  replicas: 1
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "250m"
+  env:
+    NODE_ENV: development
+
+mlService:
+  replicas: 1
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  env:
+    ENVIRONMENT: development
+    LOG_LEVEL: "debug"
+
+ingress:
+  enabled: false
+
+autoscaling:
+  enabled: false
+
+pdb:
+  enabled: false
+
+networkPolicy:
+  enabled: false
+
+# Use in-cluster PostgreSQL for dev
+postgresql:
+  enabled: true
+  auth:
+    postgresPassword: "dev_password"
+    database: amdox_dev
+
+# Use in-cluster Redis for dev
+redis:
+  enabled: true
+  auth:
+    password: "dev_redis_password"

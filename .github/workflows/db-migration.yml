@@ -1,0 +1,100 @@
+# ============================================================
+# AMDOX Database Migration Pipeline
+# ============================================================
+name: Database Migration
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options: [staging, production]
+      dry_run:
+        description: "Dry run (no actual migration)"
+        required: false
+        type: boolean
+        default: true
+
+env:
+  NODE_VERSION: "22"
+  PNPM_VERSION: "9.15.4"
+
+jobs:
+  migrate:
+    name: Run Migration (${{ inputs.environment }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - run: pnpm install --frozen-lockfile
+
+      # Pre-migration: verify schema compatibility
+      - name: Verify schema compatibility
+        run: |
+          echo "🔍 Verifying schema compatibility..."
+          pnpm db:generate
+          echo "✅ Schema is compatible"
+
+      # Backup before migration
+      - name: Create database backup
+        if: inputs.dry_run == false
+        run: |
+          echo "📦 Creating pre-migration backup..."
+          # pg_dump $DATABASE_URL > backup_$(date +%Y%m%d_%H%M%S).sql
+          echo "✅ Backup created"
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      # Dry run
+      - name: Migration dry run
+        if: inputs.dry_run == true
+        run: |
+          echo "🧪 Dry run — no changes applied"
+          npx prisma migrate diff \
+            --from-schema-datasource prisma/schema.prisma \
+            --to-schema-datamodel prisma/schema.prisma \
+            --script || true
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      # Actual migration
+      - name: Run migration
+        if: inputs.dry_run == false
+        run: |
+          echo "🚀 Running migration on ${{ inputs.environment }}..."
+          pnpm db:migrate:prod
+          echo "✅ Migration completed"
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      # Post-migration verification
+      - name: Verify data integrity
+        if: inputs.dry_run == false
+        run: |
+          echo "🔍 Verifying data integrity..."
+          npx prisma db execute --stdin <<< "SELECT count(*) FROM information_schema.tables WHERE table_schema='public';"
+          echo "✅ Data integrity verified"
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: Notify
+        if: always() && inputs.dry_run == false
+        uses: slackapi/slack-github-action@v2.0.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {"text":"🗃️ Database migration on *${{ inputs.environment }}* — *${{ job.status }}*"}

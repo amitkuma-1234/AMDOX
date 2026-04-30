@@ -1,0 +1,74 @@
+# ============================================================
+# AMDOX ERP — Staging Environment Values
+# ============================================================
+
+namespace: amdox-staging
+
+api:
+  replicas: 2
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  env:
+    NODE_ENV: production
+    LOG_LEVEL: "info"
+
+web:
+  replicas: 2
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+mlService:
+  replicas: 1
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+
+ingress:
+  enabled: true
+  hosts:
+    - host: api-staging.amdox.io
+      paths:
+        - path: /
+          pathType: Prefix
+          service: api
+    - host: app-staging.amdox.io
+      paths:
+        - path: /
+          pathType: Prefix
+          service: web
+  tls:
+    - secretName: amdox-staging-tls
+      hosts:
+        - api-staging.amdox.io
+        - app-staging.amdox.io
+
+autoscaling:
+  enabled: true
+  api:
+    minReplicas: 2
+    maxReplicas: 4
+    targetCPUUtilizationPercentage: 70
+
+pdb:
+  enabled: true
+  api:
+    minAvailable: 1
+  web:
+    minAvailable: 1
+
+networkPolicy:
+  enabled: true

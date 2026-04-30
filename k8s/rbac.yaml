@@ -1,0 +1,132 @@
+# ============================================================
+# AMDOX RBAC — Per-Namespace Roles
+# ============================================================
+
+# ── Production Namespace ──────────────────────────────────
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: amdox-deployer
+  namespace: amdox-production
+  labels:
+    app.kubernetes.io/part-of: amdox-erp
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: amdox-deployer-role
+  namespace: amdox-production
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["services", "configmaps", "secrets", "pods", "pods/log"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: amdox-deployer-binding
+  namespace: amdox-production
+subjects:
+  - kind: ServiceAccount
+    name: amdox-deployer
+    namespace: amdox-production
+roleRef:
+  kind: Role
+  name: amdox-deployer-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# ── Staging Namespace ─────────────────────────────────────
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: amdox-deployer
+  namespace: amdox-staging
+  labels:
+    app.kubernetes.io/part-of: amdox-erp
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: amdox-deployer-role
+  namespace: amdox-staging
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets"]
+    verbs: ["*"]
+  - apiGroups: [""]
+    resources: ["services", "configmaps", "secrets", "pods", "pods/log", "pods/exec"]
+    verbs: ["*"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["*"]
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    verbs: ["*"]
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["*"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: amdox-deployer-binding
+  namespace: amdox-staging
+subjects:
+  - kind: ServiceAccount
+    name: amdox-deployer
+    namespace: amdox-staging
+roleRef:
+  kind: Role
+  name: amdox-deployer-role
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# ── Monitoring Namespace ──────────────────────────────────
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: amdox-monitoring
+  namespace: amdox-monitoring
+  labels:
+    app.kubernetes.io/part-of: amdox-erp
+---
+# ClusterRole for Prometheus to scrape all namespaces
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: amdox-prometheus-scraper
+rules:
+  - apiGroups: [""]
+    resources: ["nodes", "nodes/metrics", "services", "endpoints", "pods"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["ingresses"]
+    verbs: ["get", "list", "watch"]
+  - nonResourceURLs: ["/metrics"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: amdox-prometheus-scraper-binding
+subjects:
+  - kind: ServiceAccount
+    name: amdox-monitoring
+    namespace: amdox-monitoring
+roleRef:
+  kind: ClusterRole
+  name: amdox-prometheus-scraper
+  apiGroup: rbac.authorization.k8s.io

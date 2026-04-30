@@ -1,92 +1,156 @@
 # AMDOX ERP Platform
 
-AMDOX is a next-generation, multi-tenant Enterprise Resource Planning (ERP) platform built with NestJS, Prisma, and Keycloak. It is designed for high-performance, scalability, and robust enterprise-grade security.
+<p align="center">
+  <strong>Next-Generation, Multi-Tenant Enterprise Resource Planning</strong>
+</p>
 
-## 🚀 Status: Phase 2 Completed
-
-Phase 2 implementation is officially complete, adding core business modules for Finance, HR, and Supply Chain.
-
-### Implemented Modules
-
-#### 💎 Finance & Ledger (Phase 2)
-- **General Ledger (GL):** Atomic double-entry financial ledger with multi-currency support.
-- **AP/AR:** Accounts Payable and Accounts Receivable with 3-way matching and payment run workflows.
-- **Fiscal Management:** Automated period closing and fiscal year transitions.
-
-#### 👥 Human Resources & Payroll (Phase 2)
-- **Employee Management:** Comprehensive lifecycle tracking from onboarding to offboarding.
-- **Payroll Engine:** High-volume background processing (via BullMQ) for payslip generation.
-- **Leave Management:** Automated entitlement tracking and approval workflows.
-
-#### 📦 Supply Chain & Inventory (Phase 2)
-- **Procurement:** Full Purchase Order lifecycle and Goods Receipt Note (GRN) processing.
-- **Inventory Control:** Real-time stock tracking with multi-warehouse support.
-- **Stock Movements:** Automated ledger integration for inventory valuation.
-
-#### 🔐 Core Infrastructure (Phase 1)
-- **Multi-tenant Architecture:** Secure data isolation at the database level.
-- **Identity & Access (IAM):** Keycloak integration with RBAC/ABAC guards.
-- **Monitoring & Health:** OpenTelemetry instrumentation and comprehensive health checks.
+<p align="center">
+  <img src="https://img.shields.io/badge/Node.js-22-339933?logo=node.js" alt="Node.js" />
+  <img src="https://img.shields.io/badge/NestJS-11-E0234E?logo=nestjs" alt="NestJS" />
+  <img src="https://img.shields.io/badge/Next.js-15-000000?logo=next.js" alt="Next.js" />
+  <img src="https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/Python-3.13-3776AB?logo=python" alt="Python" />
+  <img src="https://img.shields.io/badge/Kubernetes-ready-326CE5?logo=kubernetes" alt="K8s" />
+  <img src="https://img.shields.io/badge/License-UNLICENSED-red" alt="License" />
+</p>
 
 ---
 
-## 🛠 Project Setup
+## 🏗️ Architecture
 
-### Prerequisites
-- Node.js (v20+)
-- Docker & Docker Compose
-- PostgreSQL, Redis, and Keycloak (Managed via Docker)
-
-### Installation
-```bash
-$ npm install
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────────┐
+│  Next.js 15  │────▶│  NestJS 11  │────▶│ PostgreSQL 17   │
+│  (Frontend)  │     │  (API)      │     │ (Aurora Srv v2) │
+│  :3000       │     │  :4000      │     │  :5432          │
+└─────────────┘     └──────┬──────┘     └─────────────────┘
+                           │
+                    ┌──────┴──────┐     ┌─────────────────┐
+                    │  Redis 8    │     │  ML Service      │
+                    │  (Cache/MQ) │     │  FastAPI/Python  │
+                    │  :6379      │     │  :8000           │
+                    └─────────────┘     └─────────────────┘
+                           │
+                    ┌──────┴──────┐
+                    │ Keycloak 25 │
+                    │   (IAM)     │
+                    │  :8080      │
+                    └─────────────┘
 ```
 
-### Environment Configuration
-Copy `.env.example` to `.env` and configure your local settings.
-```bash
-$ cp .env.example .env
-```
-
-### Infrastructure Startup
-```bash
-$ npm run docker:up
-```
-
-### Database Migration & Seeding
-```bash
-$ npm run db:migrate
-$ npm run db:seed
-```
-
----
-
-## 🏃 Running the Application
+## 🚀 Quick Start
 
 ```bash
-# development mode
-$ npm run start:dev
+# Clone
+git clone https://github.com/amdox/amdox-erp.git
+cd amdox-erp
 
-# production mode
-$ npm run start:prod
+# Install dependencies
+pnpm install
+
+# Start infrastructure (PostgreSQL, Redis, Keycloak, Elasticsearch)
+docker compose up -d
+
+# Configure environment
+cp .env.example .env
+
+# Run database migrations & seed
+pnpm db:migrate
+pnpm db:seed
+
+# Start development
+pnpm dev
 ```
 
----
+## 📦 Tech Stack
+
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| **Frontend** | Next.js 15, React 19 | Dashboard, UI |
+| **API** | NestJS 11, TypeScript | Business logic, REST API |
+| **ML Service** | FastAPI, scikit-learn | AI/ML document intelligence |
+| **Database** | PostgreSQL 17 (Aurora) | Primary data store (ACID) |
+| **Cache** | Redis 8 | Caching, BullMQ job queues |
+| **Auth** | Keycloak 25 | SSO, RBAC, OIDC |
+| **Search** | Elasticsearch 8 | Full-text search, analytics |
+| **Orchestration** | Kubernetes, Helm | Container orchestration |
+| **IaC** | Terraform | AWS infrastructure |
+| **CI/CD** | GitHub Actions, ArgoCD | Automated pipelines |
+| **Observability** | Prometheus, Grafana, Jaeger | Metrics, logs, traces |
+
+## 🧩 Modules
+
+### Finance & Ledger
+- **General Ledger (GL):** Atomic double-entry with multi-currency
+- **AP/AR:** 3-way matching, payment run workflows
+- **Fiscal Management:** Automated period closing
+
+### Human Resources & Payroll
+- **Employee Management:** Full lifecycle tracking
+- **Payroll Engine:** BullMQ background processing
+- **Leave Management:** Automated entitlements
+
+### Supply Chain & Inventory
+- **Procurement:** Purchase Order lifecycle, GRN
+- **Inventory:** Real-time multi-warehouse tracking
+- **Stock Movements:** Automated ledger integration
+
+### Core Infrastructure
+- **Multi-tenancy:** Database-level data isolation
+- **IAM:** Keycloak SSO with RBAC/ABAC guards
+- **Observability:** OpenTelemetry instrumentation
+
+## 📚 Documentation
+
+| Document | Description |
+|----------|-------------|
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, C4 diagrams, data flows |
+| [API_DOCS.md](docs/API_DOCS.md) | REST API reference, auth, pagination |
+| [DEPLOYMENT.md](docs/DEPLOYMENT.md) | Cloud deployment guide (AWS/K8s) |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Development setup, code style, PR process |
+| [SECURITY.md](SECURITY.md) | Threat model, compliance, incident response |
 
 ## 🧪 Testing
 
 ```bash
-# unit tests
-$ npm run test
-
-# integration tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+pnpm test              # Unit tests
+pnpm test:e2e          # Integration tests
+pnpm test:cov          # Coverage report
 ```
 
----
+## 🐳 Docker
+
+```bash
+# Development
+docker compose up -d
+
+# Production
+docker compose -f docker-compose.prod.yml up -d
+
+# Observability stack
+docker compose -f observability/docker-compose.observability.yml up -d
+```
+
+## ☸️ Kubernetes
+
+```bash
+# Install via Helm
+helm install amdox charts/amdox-erp -f charts/amdox-erp/values-prod.yaml
+
+# Validate
+helm lint charts/amdox-erp
+helm template amdox charts/amdox-erp --dry-run
+```
+
+## 🏗️ Infrastructure (Terraform)
+
+```bash
+cd terraform
+terraform init -backend-config=environments/prod/backend.hcl
+terraform plan -var-file=environments/prod/terraform.tfvars
+terraform apply -var-file=environments/prod/terraform.tfvars
+```
 
 ## 📜 License
+
 AMDOX is [UNLICENSED](LICENSE).

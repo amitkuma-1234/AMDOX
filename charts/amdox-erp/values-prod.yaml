@@ -1,0 +1,100 @@
+# ============================================================
+# AMDOX ERP — Production Environment Values
+# ============================================================
+# Usage: helm install amdox charts/amdox-erp -f charts/amdox-erp/values-prod.yaml
+# ============================================================
+
+namespace: amdox-production
+
+api:
+  replicas: 3
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+  env:
+    NODE_ENV: production
+    LOG_LEVEL: "warn"
+
+web:
+  replicas: 2
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+  env:
+    NODE_ENV: production
+
+mlService:
+  replicas: 2
+  resources:
+    requests:
+      memory: "2Gi"
+      cpu: "1000m"
+    limits:
+      memory: "4Gi"
+      cpu: "2000m"
+  env:
+    ENVIRONMENT: production
+    LOG_LEVEL: "warning"
+    GUNICORN_WORKERS: "4"
+
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: "1000"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+  hosts:
+    - host: api.amdox.io
+      paths:
+        - path: /
+          pathType: Prefix
+          service: api
+    - host: app.amdox.io
+      paths:
+        - path: /
+          pathType: Prefix
+          service: web
+  tls:
+    - secretName: amdox-prod-tls
+      hosts:
+        - api.amdox.io
+        - app.amdox.io
+
+autoscaling:
+  enabled: true
+  api:
+    minReplicas: 3
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  web:
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+
+pdb:
+  enabled: true
+  api:
+    minAvailable: 2
+  web:
+    minAvailable: 1
+
+networkPolicy:
+  enabled: true
+
+postgresql:
+  enabled: false  # External RDS Aurora
+
+redis:
+  enabled: false  # External ElastiCache

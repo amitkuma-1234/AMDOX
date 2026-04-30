@@ -1,31 +1,54 @@
-# Dependencies
+# ============================================================
+# AMDOX .dockerignore
+# ============================================================
+# Reduces build context size for faster Docker builds.
+# Prevents sensitive files from being copied into images.
+# ============================================================
+
+# Dependencies (installed in container)
 node_modules/
 .pnpm-store/
+**/node_modules/
 
-# Build outputs
+# Build outputs (rebuilt in container)
 dist/
 build/
 .next/
 out/
+coverage/
+.nyc_output/
 
-# Environment
+# Environment / Secrets
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 
 # Version control
 .git/
 .gitignore
+.gitattributes
 
-# IDE
+# IDE / Editor
 .vscode/
 .idea/
 *.swp
 *.swo
+*.vim
+.editorconfig
 
 # Testing
-coverage/
-.nyc_output/
+**/*.spec.ts
+**/*.spec.js
+**/*.test.ts
+**/*.test.js
+**/test/
+**/tests/
+**/__tests__/
+**/e2e/
+jest.config.*
+jest-integration.config.*
+vitest.config.*
+.jest/
 
 # Turbo
 .turbo/
@@ -33,21 +56,54 @@ coverage/
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
 venv/
 .venv/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
 
-# Docs
+# Documentation (not needed in image)
 *.md
+!README.md
 LICENSE
+docs/
+*.txt
+!requirements.txt
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
+Desktop.ini
 
-# Dev files
+# Dev configuration files
 docker-compose*.yml
+!docker-compose.prod.yml
 .eslintrc*
-.prettierrc
+eslint.config.*
+.prettierrc*
+.prettierignore
 commitlint.config.*
 .husky/
 .lintstagedrc*
+.editorconfig
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.circleci/
+
+# Infrastructure (not for app images)
+terraform/
+charts/
+k8s/
+observability/
+keycloak/
+
+# Misc
+*.log
+*.tar
+*.gz
+tmp/
+temp/

@@ -1,0 +1,28 @@
+# ============================================================
+# AMDOX Kubernetes Namespaces
+# ============================================================
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: amdox-production
+  labels:
+    app.kubernetes.io/part-of: amdox-erp
+    environment: production
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: amdox-staging
+  labels:
+    app.kubernetes.io/part-of: amdox-erp
+    environment: staging
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: amdox-monitoring
+  labels:
+    app.kubernetes.io/part-of: amdox-erp
+    environment: monitoring
+    # Required for network policy to allow Prometheus scraping
+    kubernetes.io/metadata.name: monitoring

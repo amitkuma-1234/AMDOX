@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "amdox.fullname" . }}-config
+  namespace: {{ include "amdox.namespace" . }}
+  labels:
+    {{- include "amdox.labels" . | nindent 4 }}
+data:
+  KEYCLOAK_BASE_URL: {{ .Values.config.keycloakUrl | quote }}
+  KEYCLOAK_REALM: {{ .Values.config.keycloakRealm | quote }}
+  ELASTICSEARCH_NODE: {{ .Values.config.elasticsearchUrl | quote }}
+  REDIS_HOST: {{ .Values.config.redisHost | quote }}
+  REDIS_PORT: {{ .Values.config.redisPort | quote }}
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.config.otelEndpoint | quote }}
+  API_INTERNAL_URL: {{ .Values.config.apiUrl | quote }}

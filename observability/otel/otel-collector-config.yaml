@@ -1,0 +1,121 @@
+# ============================================================
+# OpenTelemetry Collector Configuration
+# ============================================================
+# Receives traces, metrics, logs from AMDOX services
+# Exports to Jaeger (traces), Prometheus (metrics), Loki (logs)
+# ============================================================
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+  # Prometheus scraping (pull from services)
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: "amdox-api"
+          scrape_interval: 15s
+          static_configs:
+            - targets: ["api:4000"]
+        - job_name: "amdox-ml-service"
+          scrape_interval: 15s
+          static_configs:
+            - targets: ["ml-service:8000"]
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_size: 1024
+
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+    spike_limit_mib: 128
+
+  # Add resource attributes
+  resource:
+    attributes:
+      - key: service.namespace
+        value: amdox
+        action: upsert
+      - key: deployment.environment
+        value: production
+        action: upsert
+
+  # Tail-based sampling: 100% for errors, 10% for success
+  tail_sampling:
+    decision_wait: 10s
+    num_traces: 1000
+    policies:
+      - name: errors-policy
+        type: status_code
+        status_code:
+          status_codes: [ERROR]
+      - name: success-sampling
+        type: probabilistic
+        probabilistic:
+          sampling_percentage: 10
+
+  # Redact PII from attributes
+  attributes:
+    actions:
+      - key: user.email
+        action: hash
+      - key: user.ssn
+        action: delete
+      - key: user.pan
+        action: delete
+
+exporters:
+  # Jaeger for distributed tracing
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+
+  # Prometheus for metrics
+  prometheus:
+    endpoint: 0.0.0.0:8889
+    namespace: amdox
+    resource_to_telemetry_conversion:
+      enabled: true
+
+  # Loki for logs
+  loki:
+    endpoint: http://loki:3100/loki/api/v1/push
+    labels:
+      resource:
+        service.name: "service_name"
+        service.namespace: "namespace"
+      attributes:
+        level: ""
+
+  # Debug (development only)
+  debug:
+    verbosity: basic
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+  zpages:
+    endpoint: 0.0.0.0:55679
+
+service:
+  extensions: [health_check, zpages]
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, tail_sampling, resource]
+      exporters: [otlp/jaeger]
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [memory_limiter, batch, resource]
+      exporters: [prometheus]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch, attributes, resource]
+      exporters: [loki]

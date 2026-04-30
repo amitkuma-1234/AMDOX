@@ -1,0 +1,251 @@
+# ============================================================
+# AMDOX ERP Helm Chart — Default Values
+# ============================================================
+# Override per environment with values-dev.yaml, values-prod.yaml
+# ============================================================
+
+global:
+  # Docker image registry
+  imageRegistry: ""
+  # Image pull secrets for private registries
+  imagePullSecrets: []
+  # Storage class for PVCs
+  storageClass: ""
+
+# ── Namespace ──────────────────────────────────────────────
+namespace: amdox
+
+# ── API Service ────────────────────────────────────────────
+api:
+  enabled: true
+  name: api
+  image:
+    repository: amdox/amdox-api
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  replicas: 2
+  port: 4000
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "250m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  env:
+    NODE_ENV: production
+    PORT: "4000"
+    LOG_LEVEL: "warn"
+  # Liveness probe — is the process alive?
+  livenessProbe:
+    httpGet:
+      path: /health/live
+      port: 4000
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  # Readiness probe — can it accept traffic?
+  readinessProbe:
+    httpGet:
+      path: /health/ready
+      port: 4000
+    initialDelaySeconds: 15
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  # Anti-affinity: spread pods across nodes
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/component
+                  operator: In
+                  values:
+                    - api
+            topologyKey: kubernetes.io/hostname
+  nodeSelector: {}
+  tolerations: []
+
+# ── Web Service ────────────────────────────────────────────
+web:
+  enabled: true
+  name: web
+  image:
+    repository: amdox/amdox-web
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  replicas: 2
+  port: 3000
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+  env:
+    NODE_ENV: production
+    PORT: "3000"
+  livenessProbe:
+    httpGet:
+      path: /api/health
+      port: 3000
+    initialDelaySeconds: 20
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /api/health
+      port: 3000
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+
+# ── ML Service ─────────────────────────────────────────────
+mlService:
+  enabled: true
+  name: ml-service
+  image:
+    repository: amdox/amdox-ml-service
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  replicas: 1
+  port: 8000
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "4Gi"
+      cpu: "2000m"
+  env:
+    ENVIRONMENT: production
+    LOG_LEVEL: "warning"
+    GUNICORN_WORKERS: "4"
+  livenessProbe:
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 30
+    periodSeconds: 15
+    timeoutSeconds: 10
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /health
+      port: 8000
+    initialDelaySeconds: 20
+    periodSeconds: 10
+    timeoutSeconds: 10
+    failureThreshold: 3
+  # Optional GPU node selector
+  nodeSelector: {}
+  # nodeSelector:
+  #   nvidia.com/gpu.present: "true"
+  tolerations: []
+
+# ── Ingress ────────────────────────────────────────────────
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/rate-limit: "1000"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  hosts:
+    - host: api.amdox.io
+      paths:
+        - path: /
+          pathType: Prefix
+          service: api
+    - host: app.amdox.io
+      paths:
+        - path: /
+          pathType: Prefix
+          service: web
+  tls:
+    - secretName: amdox-tls
+      hosts:
+        - api.amdox.io
+        - app.amdox.io
+
+# ── Horizontal Pod Autoscaler ──────────────────────────────
+autoscaling:
+  enabled: true
+  api:
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+  web:
+    minReplicas: 2
+    maxReplicas: 6
+    targetCPUUtilizationPercentage: 70
+
+# ── Pod Disruption Budget ──────────────────────────────────
+pdb:
+  enabled: true
+  api:
+    minAvailable: 2
+  web:
+    minAvailable: 1
+
+# ── Network Policies ──────────────────────────────────────
+networkPolicy:
+  enabled: true
+
+# ── Config Map ─────────────────────────────────────────────
+config:
+  apiUrl: "http://api:4000"
+  keycloakUrl: "https://keycloak.amdox.io"
+  keycloakRealm: "amdox"
+  elasticsearchUrl: "http://elasticsearch:9200"
+  redisHost: "redis"
+  redisPort: "6379"
+  otelEndpoint: "http://otel-collector:4318"
+
+# ── Secrets ────────────────────────────────────────────────
+# In production, use SealedSecrets or external-secrets-operator
+secrets:
+  # Set to true to create Secret resource
+  create: true
+  # Database
+  databaseUrl: ""
+  # Redis
+  redisPassword: ""
+  # JWT
+  jwtSecret: ""
+  # Elasticsearch
+  esPassword: ""
+  # Keycloak
+  keycloakClientSecret: ""
+
+# ── Service Account ────────────────────────────────────────
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+# ── PostgreSQL (Bitnami subchart) ──────────────────────────
+postgresql:
+  enabled: false  # Use external RDS in production
+  auth:
+    postgresPassword: ""
+    database: amdox
+
+# ── Redis (Bitnami subchart) ──────────────────────────────
+redis:
+  enabled: false  # Use external ElastiCache in production
+  auth:
+    password: ""
